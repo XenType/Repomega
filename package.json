@@ -1,0 +1,27 @@
+{
+    "name": "repomega",
+    "version": "1.0.0",
+    "description": "Dynamic repository package",
+    "main": "index.js",
+    "scripts": {
+        "test": "jest",
+        "compile": "tsc --watch"
+    },
+    "repository": {
+        "type": "git",
+        "url": "repomega"
+    },
+    "author": "",
+    "license": "ISC",
+    "devDependencies": {
+        "@types/jest": "^24.0.15",
+        "@types/node": "^12.6.8",
+        "jest": "^24.8.0",
+        "prettier": "^1.18.2",
+        "ts-jest": "^24.0.2",
+        "typescript": "^3.5.3"
+    },
+    "dependencies": {
+        "fs": "0.0.1-security"
+    }
+}

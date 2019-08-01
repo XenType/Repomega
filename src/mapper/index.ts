@@ -1,31 +1,50 @@
-export interface IRepoMapper {
-    getTableMap(tableName: string): TableMap;
-    getTableList(): TableList;
+export interface IOmegaMapper {
+    getTableIndex(): OmegaTableIndex;
+    getTableMap(table: string): OmegaTableMap;
 }
-export interface TableList {
+
+// Object name to table name index
+export interface OmegaTableIndex {
     [key: string]: string;
 }
-export interface MapObject {
-    [key: string]: TableMapData;
+
+// Table map structures
+export interface OmegaMasterTableMap {
+    [key: string]: OmegaTableMap;
 }
-export interface TableMapData {
-    _table: string;
-    _fields: TableMap;
-}
-export interface TableMap {
-    [key: string]: TableMapEntry;
-}
-export interface TableMapEntry {
+export interface OmegaTableMap {
     name: string;
-    external?: boolean;
-    type?: OmegaValidationType;
-    min?: number | Date;
-    max?: number | Date;
+    identity: string;
+    fields: Array<OmegaField>;
 }
-export enum OmegaValidationType {
-    STRING = 'String',
-    NUMBER = 'Number',
-    DATETIME = 'DateTime',
-    DATE = 'Date',
-    TIME = 'Time'
+export interface OmegaField {
+    name: string;
+    external: boolean;
+    locked: boolean;
+    validation: OmegaFieldValidation;
+}
+export interface OmegaFieldValidation {
+    type: string;
+    minLength?: number;
+    maxLength?: number;
+    minValue?: number;
+    maxValue?: number;
+    enumList?: Array<string | number>;
+    requireCharacters: OmegaFieldRequiredCharacters;
+}
+export interface OmegaFieldRequiredCharacters {
+    lowerCase?: boolean;
+    upperCase?: boolean;
+    number?: boolean;
+    symbol?: boolean;
+}
+export interface OmegaTableLink {
+    [key: string]: OmegaTableLinkPath[];
+}
+export interface OmegaTableLinkPath {
+    sourceTable: string;
+    sourceId: string;
+    targetTable: string;
+    targetId: string;
+    sequence: number;
 }

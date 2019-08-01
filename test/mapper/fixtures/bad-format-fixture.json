@@ -1,0 +1,21 @@
+{
+    "Market": {
+        "Xname": "test_market",
+        "Xidentity": "id",
+        "Xfields": {}
+    },
+    "Company": {
+        "name": "test_company",
+        "identity": "Xid",
+        "fields": {
+            "id": {
+                "Xname": "test_company_id",
+                "Xexternal": true,
+                "Xlocked": true,
+                "Xvalidation": {
+                    "type": "number"
+                }
+            }
+        }
+    }
+}

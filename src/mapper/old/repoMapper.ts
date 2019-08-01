@@ -12,7 +12,7 @@ export class RepoMapper implements IRepoMapper {
         const mapKeys = Object.keys(this.mapObject);
         const tableList = {};
         mapKeys.forEach(table => {
-            tableList[table] = this.mapObject[table]._table;
+            tableList[table] = this.mapObject[table].table;
         });
         return tableList;
     }
@@ -27,7 +27,7 @@ export class RepoMapper implements IRepoMapper {
         }
     }
     private createTableMapFromTableMapData(tableMapData: TableMapData): TableMap {
-        return tableMapData._fields;
+        return tableMapData.fields;
     }
     private loadMap(): void {
         const data = this.readMap();

@@ -1,7 +1,7 @@
-import { RepoMapper } from '../../src/mapper/repoMapper';
+import { RepoMapper } from '../../../src/mapper/old/repoMapper';
 import { TestTable } from './fixtures';
 
-describe('When using dal-to-serviceMapper', () => {
+xdescribe('When using dal-to-serviceMapper', () => {
     describe('And passing invalid file parameter', () => {
         test('It throws an error with the expected message when file does not exist', () => {
             let errorMessage = '';

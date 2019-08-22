@@ -1,10 +1,10 @@
+import { IOmegaMapper } from '../mapper';
+
 export interface IOmegaDal {
-    // if !returnNewObject, function will return Identity of new object
+    mapper: IOmegaMapper;
     create(table: string, newRecord: OmegaDalRecord): Promise<string | number>;
-    retrieve(table: string, criteria: OmegaCriteria): Promise<OmegaDalRecord[]>;
-    // if !returnUpdatedObjects, function will return the number of objects updated
+    read(table: string, criteria: OmegaCriteria): Promise<OmegaDalRecord[]>;
     update(table: string, updates: Partial<OmegaDalRecord>, criteria: OmegaCriteria): Promise<number>;
-    // returns number of objects deleted
     delete(table: string, criteria: OmegaCriteria): Promise<number>;
     closeAll(): Promise<void>;
 }
@@ -19,4 +19,12 @@ export interface OmegaCriteria {
 export interface OmegaCriterion {
     field: string;
     value: any;
+}
+
+export interface OmegaDalConfig {
+    host: string;
+    database: string;
+    user: string;
+    password: string;
+    connectionLimit: number;
 }

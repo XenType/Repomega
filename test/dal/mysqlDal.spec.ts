@@ -1,7 +1,15 @@
 import { MySqlDal } from '../../src/dal/mysqlDal';
 import { OmegaDalRecord, OmegaCriteria } from '../../src/dal';
 
-const mysqlDal = new MySqlDal(true);
+const integrationConfig = {
+    connectionLimit: 10,
+    host: 'localhost',
+    user: 'omegaint',
+    password: 'dev1PASS@',
+    database: 'omegaintegrationtest'
+};
+const integrationMapPath = 'test/mapper/fixtures/flat-table-map-fixture.json';
+const mysqlDal = new MySqlDal(integrationConfig, integrationMapPath);
 const tableIndex = mysqlDal.mapper.getTableIndex();
 
 describe('When using exposed utility methods of mysqlDal', () => {
@@ -19,7 +27,7 @@ describe('When using exposed utility methods of mysqlDal', () => {
         const actualResult = mysqlDal.buildCriteriaClause(testCriteria);
         expect(actualResult).toEqual("abc = 1 AND def = '3'");
     });
-    test('And building a two-AND parameter clause it returns the expected string', () => {
+    test('And building a three-AND-subLast-one-AND parameter clause it returns the expected string', () => {
         const testCriteria: OmegaCriteria = {
             _and: [{ field: 'abc', value: 1 }, { field: 'def', value: '3' }, { _and: [{ field: 'ghi', value: '444' }] }]
         };
@@ -112,7 +120,7 @@ describe('When using a live mysqlDal', () => {
             const testCriteria: OmegaCriteria = {
                 _and: [{ field: 'test_group_id', value: 1 }]
             };
-            const actualResult = await mysqlDal.retrieve(tableIndex['OptionGroup'], testCriteria);
+            const actualResult = await mysqlDal.read(tableIndex['OptionGroup'], testCriteria);
             expect(actualResult).not.toBeUndefined();
             expect(actualResult).not.toBeNull();
             expect(actualResult.length).toEqual(1);

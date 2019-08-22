@@ -15,12 +15,18 @@ export interface OmegaMasterTableMap {
 export interface OmegaTableMap {
     name: string;
     identity: string;
-    fields: Array<OmegaField>;
+    fields: OmegaFieldList;
+    childAssociations: OmegaTableLinks;
+    lateralAssociations: OmegaTableLinks;
+}
+export interface OmegaFieldList {
+    [key: string]: OmegaField;
 }
 export interface OmegaField {
     name: string;
     external: boolean;
     locked: boolean;
+    allowNull: boolean;
     validation: OmegaFieldValidation;
 }
 export interface OmegaFieldValidation {
@@ -30,7 +36,7 @@ export interface OmegaFieldValidation {
     minValue?: number;
     maxValue?: number;
     enumList?: Array<string | number>;
-    requireCharacters: OmegaFieldRequiredCharacters;
+    requireCharacters?: OmegaFieldRequiredCharacters;
 }
 export interface OmegaFieldRequiredCharacters {
     lowerCase?: boolean;
@@ -38,7 +44,7 @@ export interface OmegaFieldRequiredCharacters {
     number?: boolean;
     symbol?: boolean;
 }
-export interface OmegaTableLink {
+export interface OmegaTableLinks {
     [key: string]: OmegaTableLinkPath[];
 }
 export interface OmegaTableLinkPath {

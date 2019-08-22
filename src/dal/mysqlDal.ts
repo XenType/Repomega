@@ -1,5 +1,5 @@
 import * as mySql from 'mysql';
-import { IOmegaDal, OmegaDalRecord, OmegaCriteria, OmegaCriterion } from '.';
+import { IOmegaDal, OmegaDalRecord, OmegaCriteria, OmegaCriterion, OmegaDalConfig } from '.';
 import { OmegaTableIndex } from '../mapper';
 import { FlatMapper } from '../mapper/flatMapper';
 
@@ -20,27 +20,9 @@ const DELETE_SQL = 'DELETE FROM {0} WHERE {1}';
 export class MySqlDal implements IOmegaDal {
     tableList: OmegaTableIndex;
     public mapper: FlatMapper;
-    constructor(useTestConn: boolean = false) {
-        if (useTestConn) {
-            this.mapper = new FlatMapper('test/mapper/fixtures/flat-table-map-fixture.json');
-            connPool = mySql.createPool({
-                connectionLimit: 10,
-                host: 'localhost',
-                user: 'omegaint',
-                password: 'dev1PASS@',
-                database: 'omegaintegrationtest'
-            });
-        } else {
-            this.mapper = new FlatMapper('src/dals/mapping/dal-mySqlMap.json');
-            throw new Error('NOT IMPLEMENTED');
-            // connPool = mySql.createPool({
-            //     connectionLimit: 10,
-            //     host: 'localhost',
-            //     user: 'mailcallweb',
-            //     password: 'dev1pass@',
-            //     database: 'mailcall'
-            // });
-        }
+    constructor(dalConfig: OmegaDalConfig, dalMapPath: string) {
+        this.mapper = new FlatMapper(dalMapPath);
+        connPool = mySql.createPool(dalConfig);
         this.tableList = this.mapper.getTableIndex();
     }
     public async create(table: string, newRecord: OmegaDalRecord): Promise<string | number> {
@@ -49,7 +31,7 @@ export class MySqlDal implements IOmegaDal {
         const sqlResult = await this.getQueryResult(dbConn, sql, newRecord);
         return sqlResult.insertId;
     }
-    public async retrieve(table: string, criteria: OmegaCriteria): Promise<OmegaDalRecord[]> {
+    public async read(table: string, criteria: OmegaCriteria): Promise<OmegaDalRecord[]> {
         const dbConn = await this.getDbConnection();
         const sqlWhereClause = this.buildCriteriaClause(criteria);
         const sqlWithTable = SELECT_SQL.replace('{0}', table);

@@ -86,10 +86,14 @@ export class OmegaRepository implements IOmegaRepository {
         return null;
     }
     public async deleteOne(source: string, objectId: string | number): Promise<number> {
-        return null;
+        const omegaCriteria = this.createIdentityCriteria(source, objectId);
+        const affectedRecords = await omegaDal.delete(source, omegaCriteria);
+        return affectedRecords;
     }
     public async deleteMany(source: string, criteria: OmegaCriteria): Promise<number> {
-        return null;
+        const omegaCriteria = this.mapExternalCriteriaToDalCriteria(source, criteria);
+        const affectedRecords = await omegaDal.delete(source, omegaCriteria);
+        return affectedRecords;
     }
     public async deleteLateralAssociation(
         source: string,

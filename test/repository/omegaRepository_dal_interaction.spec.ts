@@ -168,6 +168,57 @@ describe('When using data access functions of an OmegaRepository', () => {
             await runRetrieveManyTest(expectedTableName, externalCriteria, expectedDalRecords);
         });
     });
+    describe('And calling deleteOne with criteria that matches one record', () => {
+        test('It interacts with the DAL as expected and returns the number 1', async () => {
+            const expectedTableName = 'Market';
+            const targetRecordId = 1;
+            const mockDalDelete = async function(table: string, criteria: OmegaCriteria): Promise<number> {
+                return 1;
+            };
+            const mockDal = createOmegaDalMock(testMapPath, undefined, undefined, undefined, mockDalDelete);
+            const createSpy = jest.spyOn(mockDal, 'create');
+            const readSpy = jest.spyOn(mockDal, 'read');
+            const updateSpy = jest.spyOn(mockDal, 'update');
+            const deleteSpy = jest.spyOn(mockDal, 'delete');
+            const testRepo = new OmegaRepository(mockDal);
+            const actualResult = await testRepo.deleteOne(expectedTableName, targetRecordId);
+            expect(createSpy).toHaveBeenCalledTimes(0);
+            expect(readSpy).toHaveBeenCalledTimes(0);
+            expect(updateSpy).toHaveBeenCalledTimes(0);
+            expect(deleteSpy).toHaveBeenCalledTimes(1);
+            const expectedOmegaCriteria = testRepo.createIdentityCriteria(expectedTableName, targetRecordId);
+            expect(deleteSpy).toHaveBeenCalledWith(expectedTableName, expectedOmegaCriteria);
+            expect(actualResult).toEqual(1);
+        });
+    });
+    describe('And calling deleteMany with criteria that matches records', () => {
+        test('It interacts with the DAL as expected and returns the number of deleted records', async () => {
+            const expectedTableName = 'Market';
+            const externalCriteria: OmegaCriteria = {
+                _and: [{ field: 'currencyType', value: 'YIN' }]
+            };
+            const mockDalDelete = async function(table: string, criteria: OmegaCriteria): Promise<number> {
+                return 6;
+            };
+            const mockDal = createOmegaDalMock(testMapPath, undefined, undefined, undefined, mockDalDelete);
+            const createSpy = jest.spyOn(mockDal, 'create');
+            const readSpy = jest.spyOn(mockDal, 'read');
+            const updateSpy = jest.spyOn(mockDal, 'update');
+            const deleteSpy = jest.spyOn(mockDal, 'delete');
+            const testRepo = new OmegaRepository(mockDal);
+            const actualResult = await testRepo.deleteMany(expectedTableName, externalCriteria);
+            expect(createSpy).toHaveBeenCalledTimes(0);
+            expect(readSpy).toHaveBeenCalledTimes(0);
+            expect(updateSpy).toHaveBeenCalledTimes(0);
+            expect(deleteSpy).toHaveBeenCalledTimes(1);
+            const expectedOmegaCriteria = testRepo.mapExternalCriteriaToDalCriteria(
+                expectedTableName,
+                externalCriteria
+            );
+            expect(deleteSpy).toHaveBeenCalledWith(expectedTableName, expectedOmegaCriteria);
+            expect(actualResult).toEqual(6);
+        });
+    });
 });
 
 async function runRetrieveManyTest(

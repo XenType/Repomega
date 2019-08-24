@@ -1,11 +1,11 @@
 import { createOmegaDalMock } from './fixtures/omegaDalMocks';
-import { OmegaRepository } from '../../src/repository/omegaRepository';
-import { IOmegaObject } from '../../src/object';
-import { OmegaDalRecord, OmegaCriteria, OmegaCriterion } from '../../src/dal';
-import { OmegaObject } from '../../src/object/omegaObject';
+import { OmegaRepository } from '../../../src/repository/omegaRepository';
+import { IOmegaObject } from '../../../src/object';
+import { OmegaDalRecord, OmegaCriteria, OmegaCriterion } from '../../../src/dal';
+import { OmegaObject } from '../../../src/object/omegaObject';
 import { cloneDeep } from 'lodash';
 
-const testMapPath = 'test/repository/fixtures/mapping-function-testMap.json';
+const testMapPath = 'test/repository/unit/fixtures/mapping-function-testMap.json';
 
 describe('When using data access functions of an OmegaRepository', () => {
     describe('And calling persist with no return objects', () => {
@@ -170,7 +170,7 @@ describe('When using data access functions of an OmegaRepository', () => {
     });
     describe('And calling deleteOne with criteria that matches one record', () => {
         test('It interacts with the DAL as expected and returns the number 1', async () => {
-            const expectedTableName = 'Market';
+            const externalTableName = 'Market';
             const targetRecordId = 1;
             const mockDalDelete = async function(table: string, criteria: OmegaCriteria): Promise<number> {
                 return 1;
@@ -181,19 +181,20 @@ describe('When using data access functions of an OmegaRepository', () => {
             const updateSpy = jest.spyOn(mockDal, 'update');
             const deleteSpy = jest.spyOn(mockDal, 'delete');
             const testRepo = new OmegaRepository(mockDal);
-            const actualResult = await testRepo.deleteOne(expectedTableName, targetRecordId);
+            const actualResult = await testRepo.deleteOne(externalTableName, targetRecordId);
+            const expectedTableName = testRepo.getTableMap(externalTableName).name;
             expect(createSpy).toHaveBeenCalledTimes(0);
             expect(readSpy).toHaveBeenCalledTimes(0);
             expect(updateSpy).toHaveBeenCalledTimes(0);
             expect(deleteSpy).toHaveBeenCalledTimes(1);
-            const expectedOmegaCriteria = testRepo.createIdentityCriteria(expectedTableName, targetRecordId);
+            const expectedOmegaCriteria = testRepo.createIdentityCriteria(externalTableName, targetRecordId);
             expect(deleteSpy).toHaveBeenCalledWith(expectedTableName, expectedOmegaCriteria);
             expect(actualResult).toEqual(1);
         });
     });
     describe('And calling deleteMany with criteria that matches records', () => {
         test('It interacts with the DAL as expected and returns the number of deleted records', async () => {
-            const expectedTableName = 'Market';
+            const externalTableName = 'Market';
             const externalCriteria: OmegaCriteria = {
                 _and: [{ field: 'currencyType', value: 'YIN' }]
             };
@@ -206,13 +207,14 @@ describe('When using data access functions of an OmegaRepository', () => {
             const updateSpy = jest.spyOn(mockDal, 'update');
             const deleteSpy = jest.spyOn(mockDal, 'delete');
             const testRepo = new OmegaRepository(mockDal);
-            const actualResult = await testRepo.deleteMany(expectedTableName, externalCriteria);
+            const actualResult = await testRepo.deleteMany(externalTableName, externalCriteria);
+            const expectedTableName = testRepo.getTableMap(externalTableName).name;
             expect(createSpy).toHaveBeenCalledTimes(0);
             expect(readSpy).toHaveBeenCalledTimes(0);
             expect(updateSpy).toHaveBeenCalledTimes(0);
             expect(deleteSpy).toHaveBeenCalledTimes(1);
             const expectedOmegaCriteria = testRepo.mapExternalCriteriaToDalCriteria(
-                expectedTableName,
+                externalTableName,
                 externalCriteria
             );
             expect(deleteSpy).toHaveBeenCalledWith(expectedTableName, expectedOmegaCriteria);
@@ -222,7 +224,7 @@ describe('When using data access functions of an OmegaRepository', () => {
 });
 
 async function runRetrieveManyTest(
-    expectedTableName: string,
+    externalTableName: string,
     externalCriteria: OmegaCriteria,
     expectedDalRecords: OmegaDalRecord[]
 ): Promise<void> {
@@ -235,16 +237,17 @@ async function runRetrieveManyTest(
     const updateSpy = jest.spyOn(mockDal, 'update');
     const deleteSpy = jest.spyOn(mockDal, 'delete');
     const testRepo = new OmegaRepository(mockDal);
-    const actualOmegaObjects = await testRepo.retrieveMany(expectedTableName, externalCriteria);
+    const expectedTableName = testRepo.getTableMap(externalTableName).name;
+    const actualOmegaObjects = await testRepo.retrieveMany(externalTableName, externalCriteria);
     expect(createSpy).toHaveBeenCalledTimes(0);
     expect(readSpy).toHaveBeenCalledTimes(1);
-    const expectedOmegaCriteria = testRepo.mapExternalCriteriaToDalCriteria(expectedTableName, externalCriteria);
+    const expectedOmegaCriteria = testRepo.mapExternalCriteriaToDalCriteria(externalTableName, externalCriteria);
     expect(readSpy).toHaveBeenCalledWith(expectedTableName, expectedOmegaCriteria);
     expect(updateSpy).toHaveBeenCalledTimes(0);
     expect(deleteSpy).toHaveBeenCalledTimes(0);
     if (expectedDalRecords.length > 0) {
         actualOmegaObjects.forEach((actualOmegaObject: IOmegaObject, index: number) => {
-            const expectedOmegaObject = testRepo.mapRecordToObject(expectedTableName, expectedDalRecords[index]);
+            const expectedOmegaObject = testRepo.mapRecordToObject(externalTableName, expectedDalRecords[index]);
             expect(actualOmegaObject).toStrictEqual(expectedOmegaObject);
         });
     } else {
@@ -253,7 +256,7 @@ async function runRetrieveManyTest(
 }
 
 async function runRetrieveOneTest(
-    expectedTableName: string,
+    externalTableName: string,
     expectedIdentityValue: string | number,
     expectedDalRecord?: OmegaDalRecord
 ): Promise<void> {
@@ -267,15 +270,16 @@ async function runRetrieveOneTest(
     const updateSpy = jest.spyOn(mockDal, 'update');
     const deleteSpy = jest.spyOn(mockDal, 'delete');
     const testRepo = new OmegaRepository(mockDal);
-    const expectedOmegaCriteria = testRepo.createIdentityCriteria(expectedTableName, expectedIdentityValue);
-    const actualOmegaObject = await testRepo.retrieveOne(expectedTableName, expectedIdentityValue);
+    const expectedTableName = testRepo.getTableMap(externalTableName).name;
+    const expectedOmegaCriteria = testRepo.createIdentityCriteria(externalTableName, expectedIdentityValue);
+    const actualOmegaObject = await testRepo.retrieveOne(externalTableName, expectedIdentityValue);
     expect(createSpy).toHaveBeenCalledTimes(0);
     expect(readSpy).toHaveBeenCalledTimes(1);
     expect(readSpy).toHaveBeenCalledWith(expectedTableName, expectedOmegaCriteria);
     expect(updateSpy).toHaveBeenCalledTimes(0);
     expect(deleteSpy).toHaveBeenCalledTimes(0);
     if (expectedDalRecord) {
-        const expectedOmegaObject = testRepo.mapRecordToObject(expectedTableName, expectedDalRecord);
+        const expectedOmegaObject = testRepo.mapRecordToObject(externalTableName, expectedDalRecord);
         expect(actualOmegaObject).toStrictEqual(expectedOmegaObject);
     } else {
         expect(actualOmegaObject).toBeNull();
@@ -297,13 +301,13 @@ async function runPersistTest(objectArray: Array<Partial<IOmegaObject>>, returnO
         const tableMap = preDal.mapper.getTableMap(testObject.objectSource);
         const identityValue = testObject.objectData[tableMap.identity] as string | number;
         if (identityValue !== undefined) {
-            updateParam1Array.push(testObject.objectSource);
+            updateParam1Array.push(tableMap.name);
             const affectedRecord = preRepo.mapObjectToRecord(testObject);
             updateParam2Array.push(affectedRecord);
             affectedRecordArray.push(affectedRecord);
             updateParam3Array.push(preRepo.createIdentityCriteria(testObject.objectSource, identityValue));
         } else {
-            createParam1Array.push(testObject.objectSource);
+            createParam1Array.push(tableMap.name);
             const affectedRecord = preRepo.mapObjectToRecord(testObject);
             createParam2Array.push(cloneDeep(affectedRecord));
             newIdentityStart++;

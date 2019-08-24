@@ -1,0 +1,415 @@
+{
+    "Market": {
+        "name": "test_market",
+        "identity": "id",
+        "fields": {
+            "id": {
+                "name": "test_market_id",
+                "external": true,
+                "locked": true,
+                "allowNull": false,
+                "validation": {
+                    "type": "number"
+                }
+            },
+            "name": {
+                "name": "market_name",
+                "external": true,
+                "locked": false,
+                "allowNull": false,
+                "validation": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 50
+                }
+            },
+            "currencyType": {
+                "name": "currency",
+                "external": true,
+                "locked": false,
+                "allowNull": false,
+                "validation": {
+                    "type": "enum",
+                    "enumList": ["USD", "GBP", "EUR", "YIN"]
+                }
+            }
+        },
+        "childAssociations": {
+            "Company": [
+                {
+                    "sourceTable": "Market",
+                    "sourceId": "id",
+                    "targetTable": "Company",
+                    "targetId": "marketId",
+                    "sequence": 1
+                }
+            ],
+            "User": [
+                {
+                    "sourceTable": "Market",
+                    "sourceId": "id",
+                    "targetTable": "Company",
+                    "targetId": "marketId",
+                    "sequence": 1
+                },
+                {
+                    "sourceTable": "Company",
+                    "sourceId": "id",
+                    "targetTable": "User",
+                    "targetId": "companyId",
+                    "sequence": 2
+                }
+            ]
+        }
+    },
+    "Company": {
+        "name": "test_company",
+        "identity": "id",
+        "fields": {
+            "id": {
+                "name": "test_company_id",
+                "external": true,
+                "locked": true,
+                "allowNull": false,
+                "validation": {
+                    "type": "number"
+                }
+            },
+            "name": {
+                "name": "name",
+                "external": true,
+                "locked": false,
+                "allowNull": false,
+                "validation": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 50
+                }
+            },
+            "marketId": {
+                "name": "test_market_id",
+                "external": true,
+                "locked": false,
+                "allowNull": false,
+                "validation": {
+                    "type": "number"
+                }
+            }
+        },
+        "childAssociations": {
+            "User": [
+                {
+                    "sourceTable": "Company",
+                    "sourceId": "id",
+                    "targetTable": "User",
+                    "targetId": "companyId",
+                    "sequence": 1
+                }
+            ]
+        }
+    },
+    "User": {
+        "name": "test_user",
+        "identity": "id",
+        "fields": {
+            "id": {
+                "name": "test_user_id",
+                "external": true,
+                "locked": true,
+                "allowNull": false,
+                "validation": {
+                    "type": "number"
+                }
+            },
+            "firstName": {
+                "name": "first_name",
+                "external": true,
+                "locked": false,
+                "allowNull": false,
+                "validation": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 50
+                }
+            },
+            "lastName": {
+                "name": "last_name",
+                "external": true,
+                "locked": false,
+                "allowNull": false,
+                "validation": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 50
+                }
+            },
+            "lastRating": {
+                "name": "last_rating",
+                "external": true,
+                "locked": false,
+                "allowNull": true,
+                "validation": {
+                    "type": "number",
+                    "minValue": 1,
+                    "maxValue": 10
+                }
+            },
+            "createdOn": {
+                "name": "created_at",
+                "external": true,
+                "locked": true,
+                "allowNull": false,
+                "validation": {
+                    "type": "datetime"
+                }
+            },
+            "userType": {
+                "name": "user_type",
+                "external": true,
+                "locked": false,
+                "allowNull": false,
+                "validation": {
+                    "type": "enum",
+                    "enumList": ["demo", "personal", "enterprise", "admin"]
+                }
+            },
+            "password": {
+                "name": "password",
+                "external": false,
+                "locked": false,
+                "allowNull": false,
+                "validation": {
+                    "type": "string",
+                    "minLength": 6,
+                    "maxLength": 50,
+                    "requiredCharacters": {
+                        "lowerCase": true,
+                        "upperCase": true,
+                        "number": true,
+                        "symbol": true
+                    }
+                }
+            },
+            "companyId": {
+                "name": "test_company_id",
+                "external": true,
+                "locked": false,
+                "allowNull": false,
+                "validation": {
+                    "type": "number"
+                }
+            }
+        },
+        "lateralAssociations": {
+            "OptionGroup": [
+                {
+                    "sourceTable": "User",
+                    "sourceId": "id",
+                    "targetTable": "UserOptionGroupLink",
+                    "targetId": "userId",
+                    "sequence": 1
+                },
+                {
+                    "sourceTable": "UserOptionGroupLink",
+                    "sourceId": "optionGroupId",
+                    "targetTable": "OptionGroup",
+                    "targetId": "id",
+                    "sequence": 2
+                }
+            ],
+            "OptionValue": [
+                {
+                    "sourceTable": "User",
+                    "sourceId": "id",
+                    "targetTable": "UserOptionValueLink",
+                    "targetId": "userId",
+                    "sequence": 1
+                },
+                {
+                    "sourceTable": "UserOptionValueLink",
+                    "sourceId": "optionValueId",
+                    "targetTable": "OptionValue",
+                    "targetId": "id",
+                    "sequence": 2
+                }
+            ]
+        }
+    },
+    "OptionGroup": {
+        "name": "test_group",
+        "identity": "id",
+        "fields": {
+            "id": {
+                "name": "test_group_id",
+                "external": true,
+                "locked": true,
+                "allowNull": false,
+                "validation": {
+                    "type": "number"
+                }
+            },
+            "groupName": {
+                "name": "group_name",
+                "external": true,
+                "locked": false,
+                "allowNull": false,
+                "validation": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 50
+                }
+            }
+        },
+        "childAssociations": {
+            "OptionValue": [
+                {
+                    "sourceTable": "OptionGroup",
+                    "sourceId": "id",
+                    "targetTable": "OptionValue",
+                    "targetId": "optionValueId",
+                    "sequence": 1
+                }
+            ]
+        }
+    },
+    "UserOptionGroupLink": {
+        "name": "test_user_group_link",
+        "identity": "",
+        "fields": {
+            "userId": {
+                "name": "test_user_id",
+                "external": true,
+                "locked": true,
+                "allowNull": false,
+                "validation": {
+                    "type": "number"
+                }
+            },
+            "optionGroupId": {
+                "name": "test_group_id",
+                "external": true,
+                "locked": true,
+                "allowNull": false,
+                "validation": {
+                    "type": "number"
+                }
+            }
+        }
+    },
+    "OptionValue": {
+        "name": "test_value",
+        "identity": "id",
+        "fields": {
+            "id": {
+                "name": "test_value_id",
+                "external": true,
+                "locked": true,
+                "allowNull": false,
+                "validation": {
+                    "type": "number"
+                }
+            },
+            "optionGroupId": {
+                "name": "test_group_id",
+                "external": true,
+                "locked": false,
+                "allowNull": false,
+                "validation": {
+                    "type": "number"
+                }
+            },
+            "value": {
+                "name": "value",
+                "external": true,
+                "locked": false,
+                "allowNull": false,
+                "validation": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 50
+                }
+            }
+        }
+    },
+    "UserOptionValueLink": {
+        "name": "test_user_value_link",
+        "identity": "",
+        "fields": {
+            "userId": {
+                "name": "test_user_id",
+                "external": true,
+                "locked": true,
+                "allowNull": false,
+                "validation": {
+                    "type": "number"
+                }
+            },
+            "optionValueId": {
+                "name": "test_value_id",
+                "external": true,
+                "locked": true,
+                "allowNull": false,
+                "validation": {
+                    "type": "number"
+                }
+            }
+        }
+    },
+    "BasicTests": {
+        "name": "test_basic",
+        "identity": "id",
+        "fields": {
+            "id": {
+                "name": "test_basic_id",
+                "external": true,
+                "locked": true,
+                "allowNull": false,
+                "validation": {
+                    "type": "number"
+                }
+            },
+            "stringTest": {
+                "name": "test_basic_string",
+                "external": true,
+                "locked": false,
+                "allowNull": false,
+                "validation": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 50
+                }
+            },
+            "numberTest": {
+                "name": "test_basic_number",
+                "external": true,
+                "locked": false,
+                "allowNull": false,
+                "validation": {
+                    "type": "number",
+                    "minValue": 1,
+                    "maxValue": 100
+                }
+            },
+            "dateTest": {
+                "name": "test_basic_date",
+                "external": true,
+                "locked": false,
+                "allowNull": false,
+                "validation": {
+                    "type": "datetime"
+                }
+            },
+            "nullTest": {
+                "name": "test_basic_null",
+                "external": true,
+                "locked": false,
+                "allowNull": true,
+                "validation": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 50
+                }
+            }
+        }
+    }
+}

@@ -23,7 +23,7 @@ export class FlatMapper implements IOmegaMapper {
     }
     public getTableMap(table: string): OmegaTableMap {
         if (!this.masterMap[table]) {
-            throwStandardError(extClassName, ErrorSource.REQUESTED_TABLE_MAP, ErrorSuffix.NOT_FOUND);
+            throwStandardError(extClassName, ErrorSource.REQUESTED_TABLE_MAP, ErrorSuffix.NOT_FOUND, table);
         }
         return this.masterMap[table];
     }

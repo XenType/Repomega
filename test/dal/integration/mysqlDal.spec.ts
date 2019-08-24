@@ -1,5 +1,5 @@
-import { MySqlDal } from '../../src/dal/mysqlDal';
-import { OmegaDalRecord, OmegaCriteria } from '../../src/dal';
+import { MySqlDal } from '../../../src/dal/mysqlDal';
+import { OmegaDalRecord, OmegaCriteria } from '../../../src/dal';
 
 const integrationConfig = {
     connectionLimit: 10,
@@ -8,7 +8,7 @@ const integrationConfig = {
     password: 'dev1PASS@',
     database: 'omegaintegrationtest'
 };
-const integrationMapPath = 'test/mapper/fixtures/flat-table-map-fixture.json';
+const integrationMapPath = 'test/mapper/unit/fixtures/flat-table-map-fixture.json';
 const mysqlDal = new MySqlDal(integrationConfig, integrationMapPath);
 const tableIndex = mysqlDal.mapper.getTableIndex();
 

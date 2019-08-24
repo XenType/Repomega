@@ -1,11 +1,11 @@
 import { createOmegaDalMock } from './fixtures/omegaDalMocks';
-import { OmegaRepository } from '../../src/repository/omegaRepository';
-import { OmegaCriteria, OmegaDalRecord } from '../../src/dal';
-import { ErrorSource, ErrorSuffix } from '../../src/common';
-import { OmegaObjectData, IOmegaObject } from '../../src/object';
-import { OmegaObject } from '../../src/object/omegaObject';
+import { OmegaRepository } from '../../../src/repository/omegaRepository';
+import { OmegaCriteria, OmegaDalRecord } from '../../../src/dal';
+import { ErrorSource, ErrorSuffix } from '../../../src/common';
+import { OmegaObjectData, IOmegaObject } from '../../../src/object';
+import { OmegaObject } from '../../../src/object/omegaObject';
 
-const testMapPath = 'test/repository/fixtures/mapping-function-testMap.json';
+const testMapPath = 'test/repository/unit/fixtures/mapping-function-testMap.json';
 const testDal = createOmegaDalMock(testMapPath);
 const testRepo = new OmegaRepository(testDal);
 

@@ -8,6 +8,7 @@ export enum ErrorSource {
 
 export enum ErrorSuffix {
     NOT_FOUND = 'was not found',
+    NOT_FOUND_EXAMPLE = 'was not found |{0}|',
     BAD_JSON_FORMAT = 'contains JSON format errors',
     BAD_OMEGA_FORMAT = 'contains Omega format errors',
     MISSING_NO_NULL_FIELD = 'is missing an allowNull: false field',
@@ -21,8 +22,17 @@ export enum ErrorSuffix {
     MISSING_CHARACTER = 'missing required character ({0})'
 }
 
-export function throwStandardError(location: string, source: ErrorSource, suffix: ErrorSuffix): never {
-    throw new Error(location + ': ' + source + ' ' + suffix);
+export function throwStandardError(
+    location: string,
+    source: ErrorSource,
+    suffix: ErrorSuffix,
+    replacement?: string
+): never {
+    let formattedSuffix: string = suffix;
+    if (replacement) {
+        formattedSuffix = suffix.replace('{0}', replacement);
+    }
+    throw new Error(location + ': ' + source + ' ' + formattedSuffix);
 }
 
 export function throwFieldValidationError(fieldName: string, type: string, errors: string[]): never {

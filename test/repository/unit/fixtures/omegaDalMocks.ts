@@ -1,5 +1,5 @@
-import { IOmegaDal, OmegaDalRecord, OmegaCriteria } from '../../../src/dal';
-import { FlatMapper } from '../../../src/mapper/flatMapper';
+import { IOmegaDal, OmegaDalRecord, OmegaCriteria } from '../../../../src/dal';
+import { FlatMapper } from '../../../../src/mapper/flatMapper';
 import { cloneDeep } from 'lodash';
 
 export function createOmegaDalMock(

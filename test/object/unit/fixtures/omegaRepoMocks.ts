@@ -7,11 +7,11 @@ import {
     IOmegaRepository,
     RepositoryActAssociations,
     RepositoryGetAssociations
-} from '../../../src/repository';
-import { IOmegaObject } from '../../../src/object';
-import { OmegaCriteria } from '../../../src/dal';
-import { FlatMapper } from '../../../src/mapper/flatMapper';
-import { OmegaTableMap } from '../../../src/mapper';
+} from '../../../../src/repository';
+import { IOmegaObject } from '../../../../src/object';
+import { OmegaCriteria } from '../../../../src/dal';
+import { FlatMapper } from '../../../../src/mapper/flatMapper';
+import { OmegaTableMap } from '../../../../src/mapper';
 
 const testMapPath = 'test/repository/fixtures/mapping-function-testMap.json';
 

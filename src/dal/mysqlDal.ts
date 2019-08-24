@@ -3,14 +3,6 @@ import { IOmegaDal, OmegaDalRecord, OmegaCriteria, OmegaCriterion, OmegaDalConfi
 import { OmegaTableIndex } from '../mapper';
 import { FlatMapper } from '../mapper/flatMapper';
 
-// Responsibilities of the DAL:
-// Build SQL statments
-// Execute SQL statements
-// Return analytics
-// SHOULD NOT:
-// Do translations
-// Do validations
-
 let connPool: mySql.Pool;
 const INSERT_SQL = 'INSERT INTO {0} SET ?';
 const SELECT_SQL = 'SELECT * FROM {0} WHERE {1}';
@@ -29,6 +21,7 @@ export class MySqlDal implements IOmegaDal {
         const dbConn = await this.getDbConnection();
         const sql = INSERT_SQL.replace('{0}', table);
         const sqlResult = await this.getQueryResult(dbConn, sql, newRecord);
+        dbConn.release();
         return sqlResult.insertId;
     }
     public async read(table: string, criteria: OmegaCriteria): Promise<OmegaDalRecord[]> {
@@ -37,6 +30,7 @@ export class MySqlDal implements IOmegaDal {
         const sqlWithTable = SELECT_SQL.replace('{0}', table);
         const sql = sqlWithTable.replace('{1}', sqlWhereClause);
         const sqlResult = await this.getQueryResult(dbConn, sql);
+        dbConn.release();
         return sqlResult;
     }
     // if !returnUpdatedObjects, function will return the number of objects updated
@@ -48,6 +42,7 @@ export class MySqlDal implements IOmegaDal {
         const sqlWithUpdates = sqlWithTable.replace('{1}', sqlUpdateClause);
         const sql = sqlWithUpdates.replace('{2}', sqlWhereClause);
         const sqlResult = await this.getQueryResult(dbConn, sql);
+        dbConn.release();
         return sqlResult.affectedRows;
     }
     // returns number of objects deleted
@@ -57,6 +52,7 @@ export class MySqlDal implements IOmegaDal {
         const sqlWithTable = DELETE_SQL.replace('{0}', table);
         const sql = sqlWithTable.replace('{1}', sqlWhereClause);
         const sqlResult = await this.getQueryResult(dbConn, sql);
+        dbConn.release();
         return sqlResult.affectedRows;
     }
     public async closeAll(): Promise<void> {

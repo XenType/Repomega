@@ -3,7 +3,7 @@ import { OmegaCriteria, IOmegaDal, OmegaDalRecord, OmegaCriterion } from '../dal
 import { IOmegaMapper, OmegaField } from '../mapper';
 import { ErrorSource, ErrorSuffix, throwStandardError, throwFieldValidationError } from '../common';
 import { OmegaTableMap } from '../mapper';
-import { IOmegaObject, OmegaObjectData } from '../object';
+import { OmegaObjectData } from '../object';
 import { OmegaObject } from '../object/omegaObject';
 import { types } from 'util';
 
@@ -16,24 +16,23 @@ export class OmegaRepository implements IOmegaRepository {
         omegaMapper = omegaDal.mapper;
     }
     public async persist(
-        externalObjects: Array<Partial<IOmegaObject>>,
+        externalObjects: Array<Partial<OmegaObject>>,
         returnObjects?: boolean
-    ): Promise<void | IOmegaObject[]> {
-        const affectedObjects: IOmegaObject[] = [];
-
+    ): Promise<void | OmegaObject[]> {
+        const affectedObjects: OmegaObject[] = [];
         for (const omegaObject of externalObjects) {
             const record = this.mapObjectToRecord(omegaObject);
             const tableMap = this.getTableMap(omegaObject.objectSource);
             let identityValue = this.getRecordIdentityValue(tableMap, record);
             if (identityValue === undefined) {
-                identityValue = await omegaDal.create(omegaObject.objectSource, record);
+                identityValue = await omegaDal.create(tableMap.name, record);
             } else {
                 const identityCriteria = this.createIdentityCriteria(omegaObject.objectSource, identityValue);
-                await omegaDal.update(omegaObject.objectSource, record, identityCriteria);
+                await omegaDal.update(tableMap.name, record, identityCriteria);
             }
             if (returnObjects) {
                 const criteria = this.createIdentityCriteria(omegaObject.objectSource, identityValue);
-                const records = await omegaDal.read(omegaObject.objectSource, criteria);
+                const records = await omegaDal.read(tableMap.name, criteria);
                 affectedObjects.push(this.mapRecordToObject(omegaObject.objectSource, records[0]));
             }
         }
@@ -50,20 +49,22 @@ export class OmegaRepository implements IOmegaRepository {
     ): Promise<void> {
         return;
     }
-    public async retrieveOne(source: string, objectId: string | number): Promise<IOmegaObject> {
+    public async retrieveOne(source: string, objectId: string | number): Promise<OmegaObject> {
         const identityCriteria = this.createIdentityCriteria(source, objectId);
-        const dalRecords = await omegaDal.read(source, identityCriteria);
+        const tableMap = this.getTableMap(source);
+        const dalRecords = await omegaDal.read(tableMap.name, identityCriteria);
         if (dalRecords && dalRecords.length > 0) {
             const omegaObject = this.mapRecordToObject(source, dalRecords[0]);
             return omegaObject;
         }
         return null;
     }
-    public async retrieveMany(source: string, criteria: OmegaCriteria): Promise<IOmegaObject[]> {
+    public async retrieveMany(source: string, criteria: OmegaCriteria): Promise<OmegaObject[]> {
         const internalCriteria = this.mapExternalCriteriaToDalCriteria(source, criteria);
-        const dalRecords = await omegaDal.read(source, internalCriteria);
+        const tableMap = this.getTableMap(source);
+        const dalRecords = await omegaDal.read(tableMap.name, internalCriteria);
         if (dalRecords && dalRecords.length > 0) {
-            const omegaObjects: IOmegaObject[] = [];
+            const omegaObjects: OmegaObject[] = [];
             dalRecords.forEach(dalRecord => {
                 omegaObjects.push(this.mapRecordToObject(source, dalRecord));
             });
@@ -75,24 +76,26 @@ export class OmegaRepository implements IOmegaRepository {
         source: string,
         sourceId: number | string,
         target: string
-    ): Promise<IOmegaObject[]> {
+    ): Promise<OmegaObject[]> {
         return null;
     }
     public async retrieveByLateralAssociation(
         source: string,
         sourceId: number | string,
         target: string
-    ): Promise<IOmegaObject[]> {
+    ): Promise<OmegaObject[]> {
         return null;
     }
     public async deleteOne(source: string, objectId: string | number): Promise<number> {
         const omegaCriteria = this.createIdentityCriteria(source, objectId);
-        const affectedRecords = await omegaDal.delete(source, omegaCriteria);
+        const tableMap = this.getTableMap(source);
+        const affectedRecords = await omegaDal.delete(tableMap.name, omegaCriteria);
         return affectedRecords;
     }
     public async deleteMany(source: string, criteria: OmegaCriteria): Promise<number> {
         const omegaCriteria = this.mapExternalCriteriaToDalCriteria(source, criteria);
-        const affectedRecords = await omegaDal.delete(source, omegaCriteria);
+        const tableMap = this.getTableMap(source);
+        const affectedRecords = await omegaDal.delete(tableMap.name, omegaCriteria);
         return affectedRecords;
     }
     public async deleteLateralAssociation(
@@ -107,7 +110,7 @@ export class OmegaRepository implements IOmegaRepository {
         return omegaMapper.getTableMap(source);
     }
     // public for testing
-    public mapObjectToRecord(externalObject: Partial<IOmegaObject>): OmegaDalRecord {
+    public mapObjectToRecord(externalObject: Partial<OmegaObject>): OmegaDalRecord {
         const tableMap = omegaMapper.getTableMap(externalObject.objectSource);
         const objectData = externalObject.objectData;
         const record = this.initOmegaDalRecord(tableMap, objectData);
@@ -156,7 +159,7 @@ export class OmegaRepository implements IOmegaRepository {
             }
         }
     }
-    public mapRecordToObject(table: string, omegaRecord: OmegaDalRecord): IOmegaObject {
+    public mapRecordToObject(table: string, omegaRecord: OmegaDalRecord): OmegaObject {
         const tableMap = omegaMapper.getTableMap(table);
         const newObject = new OmegaObject(this);
         newObject.objectSource = table;

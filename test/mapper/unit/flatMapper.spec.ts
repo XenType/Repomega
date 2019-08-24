@@ -1,13 +1,13 @@
-import { FlatMapper } from '../../src/mapper/flatMapper';
-import { ErrorSource, ErrorSuffix } from '../../src/common';
-import { OmegaTableIndex } from '../../src/mapper';
+import { FlatMapper } from '../../../src/mapper/flatMapper';
+import { ErrorSource, ErrorSuffix } from '../../../src/common';
+import { OmegaTableIndex } from '../../../src/mapper';
 const tableMapFixture = require('./fixtures/flat-table-map-fixture.json');
 
 describe('When using FlatMapper', () => {
     describe('And creating an instance of FlatMapper', () => {
         test('It throws expected error when file does not exist', () => {
             let message = '';
-            const badFilePath = './bleh.json';
+            const badFilePath = 'bleh.json';
             try {
                 const mapper = new FlatMapper(badFilePath);
             } catch (error) {
@@ -17,7 +17,7 @@ describe('When using FlatMapper', () => {
         });
         test('It throws expected error when file does not contain valid JSON data', () => {
             let message = '';
-            const badFilePath = 'test/mapper/fixtures/badjsonfixture.json';
+            const badFilePath = 'test/mapper/unit/fixtures/badjsonfixture.json';
             try {
                 const mapper = new FlatMapper(badFilePath);
             } catch (error) {
@@ -27,7 +27,7 @@ describe('When using FlatMapper', () => {
         });
         test('It completes without error when given a file with vaild JSON', () => {
             let message = '';
-            const goodFilePath = 'test/mapper/fixtures/flat-table-map-fixture.json';
+            const goodFilePath = 'test/mapper/unit/fixtures/flat-table-map-fixture.json';
             try {
                 const mapper = new FlatMapper(goodFilePath);
             } catch (error) {
@@ -48,13 +48,13 @@ describe('When using FlatMapper', () => {
                 UserOptionValueLink: 'test_user_value_link',
                 BasicTests: 'test_basic'
             };
-            const goodFilePath = 'test/mapper/fixtures/flat-table-map-fixture.json';
+            const goodFilePath = 'test/mapper/unit/fixtures/flat-table-map-fixture.json';
             const mapper = new FlatMapper(goodFilePath);
             const tableIndex = mapper.getTableIndex();
             expect(tableIndex).toStrictEqual(expectedTableIndex);
         });
         test('It throws expected Error when a table has an invalid name property', () => {
-            const invalidFilePath = 'test/mapper/fixtures/bad-format-fixture.json';
+            const invalidFilePath = 'test/mapper/unit/fixtures/bad-format-fixture.json';
             const mapper = new FlatMapper(invalidFilePath);
             let message = '';
             try {
@@ -68,7 +68,7 @@ describe('When using FlatMapper', () => {
     describe('And calling getTableMap', () => {
         test('It returns expected object with no errors when a valid table is requested', () => {
             const expectedTableMap = tableMapFixture.Market;
-            const goodFilePath = 'test/mapper/fixtures/flat-table-map-fixture.json';
+            const goodFilePath = 'test/mapper/unit/fixtures/flat-table-map-fixture.json';
             const mapper = new FlatMapper(goodFilePath);
             const tableMap = mapper.getTableMap('Market');
             expect(tableMap).toStrictEqual(expectedTableMap);
@@ -76,7 +76,7 @@ describe('When using FlatMapper', () => {
         test('It throws expected error when requested table is not found', () => {
             let message = '';
             const expectedTableMap = tableMapFixture.Market;
-            const goodFilePath = 'test/mapper/fixtures/flat-table-map-fixture.json';
+            const goodFilePath = 'test/mapper/unit/fixtures/flat-table-map-fixture.json';
             const mapper = new FlatMapper(goodFilePath);
             try {
                 const tableMap = mapper.getTableMap('notfound');

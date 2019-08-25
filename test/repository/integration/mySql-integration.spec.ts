@@ -150,14 +150,14 @@ describe('When an omegaRepository with a live omegaDal connection', () => {
                 });
             }
         });
-        test('If passed criteria with no match, an empty array is returned', async () => {
+        test('If passed criteria with no match, zero returned', async () => {
             const externalCriteria: OmegaCriteria = {
                 _and: [{ field: 'currencyType', value: deleteManyNotFoundCurrency }]
             };
             const deletedCount = await testRepo.deleteMany('Market', externalCriteria);
             expect(deletedCount).toEqual(0);
         });
-        test('If passed criteria with matches, expected array is returned', async () => {
+        test('If passed criteria with matches, expected value is returned', async () => {
             const externalCriteria: OmegaCriteria = {
                 _and: [{ field: 'currencyType', value: deleteManyFoundCurrency }]
             };

@@ -41,14 +41,6 @@ export class OmegaRepository implements IOmegaRepository {
         }
         return;
     }
-    public async persistLateralAssociation(
-        source: string,
-        sourceId: number | string,
-        target: string,
-        targetId: number | string
-    ): Promise<void> {
-        return;
-    }
     public async retrieveOne(source: string, objectId: string | number): Promise<OmegaObject> {
         const identityCriteria = this.createIdentityCriteria(source, objectId);
         const tableMap = this.getTableMap(source);
@@ -72,20 +64,6 @@ export class OmegaRepository implements IOmegaRepository {
         }
         return [];
     }
-    public async retrieveByChildAssociation(
-        source: string,
-        sourceId: number | string,
-        target: string
-    ): Promise<OmegaObject[]> {
-        return null;
-    }
-    public async retrieveByLateralAssociation(
-        source: string,
-        sourceId: number | string,
-        target: string
-    ): Promise<OmegaObject[]> {
-        return null;
-    }
     public async deleteOne(source: string, objectId: string | number): Promise<number> {
         const omegaCriteria = this.createIdentityCriteria(source, objectId);
         const tableMap = this.getTableMap(source);
@@ -97,14 +75,6 @@ export class OmegaRepository implements IOmegaRepository {
         const tableMap = this.getTableMap(source);
         const affectedRecords = await omegaDal.delete(tableMap.name, omegaCriteria);
         return affectedRecords;
-    }
-    public async deleteLateralAssociation(
-        source: string,
-        sourceId: string | number,
-        target: string,
-        targetId: string | number
-    ): Promise<void> {
-        return;
     }
     public getTableMap(source: string): OmegaTableMap {
         return omegaMapper.getTableMap(source);

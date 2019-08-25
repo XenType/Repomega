@@ -1,39 +1,24 @@
 import { OmegaCriteria } from '../dal';
-import { IOmegaObject } from '../object';
+import { OmegaObject } from '../object/omegaObject';
 import { OmegaTableMap } from '../mapper';
 
 export interface IOmegaRepository {
     persist: RepositoryPersist;
-    persistLateralAssociation: RepositoryActAssociations;
     retrieveOne: RepositoryGetSingle;
     retrieveMany: RepositoryGetMany;
-    retrieveByChildAssociation: RepositoryGetAssociations;
-    retrieveByLateralAssociation: RepositoryGetAssociations;
     deleteOne: RepositoryActSingle;
     deleteMany: RepositoryActMany;
-    deleteLateralAssociation: RepositoryActAssociations;
     getTableMap(source: string): OmegaTableMap;
 }
 
 export type RepositoryPersist = (
-    externalObjects: IOmegaObject[],
+    externalObjects: OmegaObject[],
     returnObjects?: boolean
-) => Promise<void | IOmegaObject[]>;
-export type RepositoryGetSingle = (source: string, objectId: string | number) => Promise<IOmegaObject>;
-export type RepositoryGetMany = (source: string, criteria: OmegaCriteria) => Promise<IOmegaObject[]>;
+) => Promise<void | OmegaObject[]>;
+export type RepositoryGetSingle = (source: string, objectId: string | number) => Promise<OmegaObject>;
+export type RepositoryGetMany = (source: string, criteria: OmegaCriteria) => Promise<OmegaObject[]>;
 export type RepositoryActSingle = (source: string, objectId: string | number) => Promise<number>;
 export type RepositoryActMany = (source: string, criteria: OmegaCriteria) => Promise<number>;
-export type RepositoryGetAssociations = (
-    source: string,
-    sourceId: number | string,
-    target: string
-) => Promise<IOmegaObject[]>;
-export type RepositoryActAssociations = (
-    source: string,
-    sourceId: number | string,
-    target: string,
-    targetId: number | string
-) => Promise<void>;
 
 export interface ValidationField {
     fieldName: string;

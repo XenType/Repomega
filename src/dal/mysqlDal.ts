@@ -1,11 +1,12 @@
 import * as mySql from 'mysql';
-import { IOmegaDal, OmegaDalRecord, OmegaCriteria, OmegaCriterion, OmegaDalConfig } from '.';
+import { IOmegaDal, OmegaDalRecord, OmegaCriteria, OmegaCriterion, OmegaDalConfig, OmegaCriterionLinkTable } from '.';
 import { OmegaTableIndex } from '../mapper';
 import { FlatMapper } from '../mapper/flatMapper';
 
 let connPool: mySql.Pool;
 const INSERT_SQL = 'INSERT INTO {0} SET ?';
 const SELECT_SQL = 'SELECT * FROM {0} WHERE {1}';
+const SELECT_ONLY_SQL = 'SELECT {0} FROM {1} WHERE {2}';
 const UPDATE_SQL = 'UPDATE {0} SET {1} WHERE {2}';
 const DELETE_SQL = 'DELETE FROM {0} WHERE {1}';
 
@@ -79,11 +80,19 @@ export class MySqlDal implements IOmegaDal {
         }
         return criteriaClause;
     }
-    private mapCriteriaGroup(criteriaArray: Array<OmegaCriteria | OmegaCriterion>): string[] {
-        const pairs = criteriaArray.map((item: OmegaCriterion | OmegaCriteria) => {
+    private mapCriteriaGroup(criteriaArray: Array<OmegaCriteria | OmegaCriterion | OmegaCriterionLinkTable>): string[] {
+        const pairs = criteriaArray.map(item => {
             if ((item as OmegaCriteria)._and || (item as OmegaCriteria)._or) {
                 const recursiveResult = this.buildCriteriaClause(item as OmegaCriteria);
                 return '(' + recursiveResult + ')';
+            }
+            if ((item as OmegaCriterionLinkTable).targetTable) {
+                const linkTableItem = item as OmegaCriterionLinkTable;
+                const linkTableResult = this.buildCriteriaClause(linkTableItem.criteria);
+                const linkTableSql = SELECT_ONLY_SQL.replace('{0}', linkTableItem.targetField)
+                    .replace('{1}', linkTableItem.targetTable)
+                    .replace('{2}', linkTableResult);
+                return `${linkTableItem.sourceField} IN (${linkTableSql})`;
             }
             return `${(item as OmegaCriterion).field} = ${mySql.escape((item as OmegaCriterion).value)}`;
         });

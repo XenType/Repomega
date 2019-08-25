@@ -1,5 +1,5 @@
 import { IOmegaRepository, ValidationField } from '.';
-import { OmegaCriteria, IOmegaDal, OmegaDalRecord, OmegaCriterion } from '../dal';
+import { OmegaCriteria, IOmegaDal, OmegaDalRecord, OmegaCriterion, OmegaCriterionLinkTable } from '../dal';
 import { IOmegaMapper, OmegaField } from '../mapper';
 import { ErrorSource, ErrorSuffix, throwStandardError, throwFieldValidationError } from '../common';
 import { OmegaTableMap } from '../mapper';
@@ -260,7 +260,7 @@ export class OmegaRepository implements IOmegaRepository {
         return internalCriteria;
     }
     private mapCriteriaGroup(
-        criteriaArray: Array<OmegaCriteria | OmegaCriterion>,
+        criteriaArray: Array<OmegaCriteria | OmegaCriterion | OmegaCriterionLinkTable>,
         tableMap: OmegaTableMap
     ): Array<OmegaCriteria | OmegaCriterion> {
         const returnArray: Array<OmegaCriteria | OmegaCriterion> = [];

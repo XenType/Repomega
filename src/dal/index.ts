@@ -13,12 +13,18 @@ export interface OmegaDalRecord {
     [key: string]: string | number | Date;
 }
 export interface OmegaCriteria {
-    _and?: Array<OmegaCriterion | OmegaCriteria>;
-    _or?: Array<OmegaCriterion | OmegaCriteria>;
+    _and?: Array<OmegaCriterion | OmegaCriteria | OmegaCriterionLinkTable>;
+    _or?: Array<OmegaCriterion | OmegaCriteria | OmegaCriterionLinkTable>;
 }
 export interface OmegaCriterion {
     field: string;
     value: any;
+}
+export interface OmegaCriterionLinkTable {
+    sourceField: string;
+    targetTable: string;
+    targetField: string;
+    criteria: OmegaCriteria;
 }
 
 export interface OmegaDalConfig {

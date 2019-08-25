@@ -262,11 +262,21 @@ export class OmegaRepository implements IOmegaRepository {
     private mapCriteriaGroup(
         criteriaArray: Array<OmegaCriteria | OmegaCriterion | OmegaCriterionLinkTable>,
         tableMap: OmegaTableMap
-    ): Array<OmegaCriteria | OmegaCriterion> {
-        const returnArray: Array<OmegaCriteria | OmegaCriterion> = [];
+    ): Array<OmegaCriteria | OmegaCriterion | OmegaCriterionLinkTable> {
+        const returnArray: Array<OmegaCriteria | OmegaCriterion | OmegaCriterionLinkTable> = [];
         criteriaArray.forEach(externalItem => {
             if ((externalItem as OmegaCriteria)._and || (externalItem as OmegaCriteria)._or) {
                 returnArray.push(this.mapAllCriteria(externalItem as OmegaCriteria, tableMap));
+            } else if ((externalItem as OmegaCriterionLinkTable).targetTable) {
+                const externalLinkItem = externalItem as OmegaCriterionLinkTable;
+                const externalTableMap = this.getTableMap(externalLinkItem.targetTable);
+                const linkTableCriteria: OmegaCriterionLinkTable = {
+                    sourceField: tableMap.fields[externalLinkItem.sourceField].name,
+                    targetTable: externalTableMap.name,
+                    targetField: externalTableMap.fields[externalLinkItem.targetField].name,
+                    criteria: this.mapAllCriteria(externalLinkItem.criteria, externalTableMap)
+                };
+                returnArray.push(linkTableCriteria);
             } else {
                 returnArray.push({
                     field: tableMap.fields[(externalItem as OmegaCriterion).field].name,

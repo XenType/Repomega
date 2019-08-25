@@ -2,7 +2,7 @@ import { createOmegaDalMock } from './fixtures/omegaDalMocks';
 import { OmegaRepository } from '../../../src/repository/omegaRepository';
 import { OmegaCriteria, OmegaDalRecord } from '../../../src/dal';
 import { ErrorSource, ErrorSuffix } from '../../../src/common';
-import { OmegaObjectData, IOmegaObject } from '../../../src/object';
+import { OmegaObjectData } from '../../../src/object';
 import { OmegaObject } from '../../../src/object/omegaObject';
 
 const testMapPath = 'test/repository/unit/fixtures/mapping-function-testMap.json';
@@ -94,6 +94,30 @@ describe('When using mapping functions of an omegaRepository', () => {
             const actualResult = testRepo.mapExternalCriteriaToDalCriteria('User', inputCritera);
             expect(actualResult).toStrictEqual(expectedResult);
         });
+        test('If a valid table and simple LinkTable criteria are passed the expected result is returned', () => {
+            const expectedResult: OmegaCriteria = {
+                _and: [
+                    {
+                        sourceField: 'test_user_id',
+                        targetTable: 'test_user_group_link',
+                        targetField: 'test_user_id',
+                        criteria: { _or: [{ field: 'test_group_id', value: 1 }] }
+                    }
+                ]
+            };
+            const inputCritera: OmegaCriteria = {
+                _and: [
+                    {
+                        sourceField: 'id',
+                        targetTable: 'UserOptionGroupLink',
+                        targetField: 'userId',
+                        criteria: { _or: [{ field: 'optionGroupId', value: 1 }] }
+                    }
+                ]
+            };
+            const actualResult = testRepo.mapExternalCriteriaToDalCriteria('User', inputCritera);
+            expect(actualResult).toStrictEqual(expectedResult);
+        });
         test('If a valid table and a complex criteria are passed the expected result is returned', () => {
             const expectedResult: OmegaCriteria = {
                 _or: [
@@ -101,6 +125,12 @@ describe('When using mapping functions of an omegaRepository', () => {
                     {
                         _or: [
                             { field: 'last_rating', value: 1 },
+                            {
+                                sourceField: 'test_user_id',
+                                targetTable: 'test_user_group_link',
+                                targetField: 'test_user_id',
+                                criteria: { _or: [{ field: 'test_group_id', value: 1 }] }
+                            },
                             { field: 'last_name', value: 'smith' },
                             {
                                 _and: [
@@ -118,6 +148,12 @@ describe('When using mapping functions of an omegaRepository', () => {
                     {
                         _or: [
                             { field: 'lastRating', value: 1 },
+                            {
+                                sourceField: 'id',
+                                targetTable: 'UserOptionGroupLink',
+                                targetField: 'userId',
+                                criteria: { _or: [{ field: 'optionGroupId', value: 1 }] }
+                            },
                             { field: 'lastName', value: 'smith' },
                             {
                                 _and: [{ field: 'firstName', value: 'jane' }, { field: 'userType', value: 'personal' }]
@@ -228,7 +264,7 @@ describe('When using mapping functions of an omegaRepository', () => {
                 test_basic_date: new Date('12/23/1977'),
                 test_basic_null: null
             };
-            const testObject: Partial<IOmegaObject> = {
+            const testObject: Partial<OmegaObject> = {
                 objectSource: 'BasicTests',
                 objectData: {
                     id: 1,
@@ -248,7 +284,7 @@ describe('When using mapping functions of an omegaRepository', () => {
                 test_basic_date: new Date('12/23/1977'),
                 test_basic_null: null
             };
-            const testObject: Partial<IOmegaObject> = {
+            const testObject: Partial<OmegaObject> = {
                 objectSource: 'BasicTests',
                 objectData: {
                     stringTest: 'abcd',
@@ -266,7 +302,7 @@ describe('When using mapping functions of an omegaRepository', () => {
                 test_basic_string: 'abcd',
                 test_basic_number: 10
             };
-            const testObject: Partial<IOmegaObject> = {
+            const testObject: Partial<OmegaObject> = {
                 objectSource: 'BasicTests',
                 objectData: {
                     id: 1,
@@ -283,7 +319,7 @@ describe('When using mapping functions of an omegaRepository', () => {
                 test_basic_number: 10,
                 test_basic_date: new Date('12/23/1977')
             };
-            const testObject: Partial<IOmegaObject> = {
+            const testObject: Partial<OmegaObject> = {
                 objectSource: 'BasicTests',
                 objectData: {
                     stringTest: 'abcd',
@@ -295,7 +331,7 @@ describe('When using mapping functions of an omegaRepository', () => {
             expect(actualResult).toEqual(expectedResult);
         });
         test('If an invalid partial new external object is passed, the exected exception is thrown', () => {
-            const testObject: Partial<IOmegaObject> = {
+            const testObject: Partial<OmegaObject> = {
                 objectSource: 'BasicTests',
                 objectData: {
                     stringTest: 'abcd',

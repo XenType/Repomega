@@ -11,7 +11,7 @@ import { FlatMapper } from '../../../../src/mapper/flatMapper';
 import { OmegaTableMap } from '../../../../src/mapper';
 import { OmegaObject } from '../../../../src/object/omegaObject';
 
-const testMapPath = 'test/repository/integration/fixtures/integration-map.json';
+const testMapPath = 'test/dal/integration/fixtures/integration-map.json';
 
 export function assertRepoUsageCounts(
     spyContainer: RepoSpies,

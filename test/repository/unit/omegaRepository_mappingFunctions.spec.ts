@@ -5,6 +5,7 @@ import { ErrorSource, ErrorSuffix } from '../../../src/common';
 import { OmegaObjectData } from '../../../src/object';
 import { OmegaObject } from '../../../src/object/omegaObject';
 
+// This is not the standard integration-map.json because a badly formatted table object is required for testing
 const testMapPath = 'test/repository/unit/fixtures/mapping-function-testMap.json';
 const testDal = createOmegaDalMock(testMapPath);
 const testRepo = new OmegaRepository(testDal);

@@ -11,7 +11,7 @@ const integrationConfig = {
     password: 'dev1PASS@',
     database: 'omegaintegrationtest'
 };
-const integrationMapPath = 'test/repository/integration/fixtures/integration-map.json';
+const integrationMapPath = 'test/dal/integration/fixtures/integration-map.json';
 const mySqlDal = new MySqlDal(integrationConfig, integrationMapPath);
 const testRepo = new OmegaRepository(mySqlDal);
 

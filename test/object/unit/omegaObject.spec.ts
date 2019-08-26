@@ -1,9 +1,8 @@
 import { createOmegaRepoMock, createOmegaRepoSpies, assertRepoUsageCounts } from './fixtures/omegaRepoMocks';
 import { OmegaObject } from '../../../src/object/omegaObject';
 import { cloneDeep } from 'lodash';
-import { createTestObject, createAndCriteria } from './fixtures';
+import { createTestObject } from './fixtures';
 import { OmegaCriteria } from '../../../src/dal';
-import { stringLiteral } from '@babel/types';
 
 describe('When using functions of an IOmegaObject', () => {
     describe('And calling save', () => {
@@ -53,9 +52,9 @@ describe('When using functions of an IOmegaObject', () => {
                 expect(message).toEqual('Association Error = Company table map has no child association to Market');
             });
         });
-        // NEXT TODO: Update parent^N tests to shorten call as shown below (line 58)
-        // SELECT * FROM market WHERE marketId = 2
-        // SELECT * FROM market WHERE marketId IN (SELECT marketId FROM company WHERE companyId = 3)
+        // NEXT TODO: Update parent^1 tests to shorten call as shown below (line 58)
+        // DONE: SELECT * FROM market WHERE marketId = 2
+        // (DAL): SELECT * FROM market WHERE marketId IN (SELECT marketId FROM company WHERE companyId = 3)
         describe('When a parent^1 record association exists', () => {
             test('It interacts with the repository as expected', async () => {
                 const mockRepo = createOmegaRepoMock();

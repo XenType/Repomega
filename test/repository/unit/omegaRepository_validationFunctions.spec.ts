@@ -4,7 +4,7 @@ import { OmegaField, OmegaFieldValidation } from '../../../src/mapper';
 import { cloneDeep } from 'lodash';
 import { ValidationField } from '../../../src/repository';
 
-const testMapPath = 'test/repository/unit/fixtures/mapping-function-testMap.json';
+const testMapPath = 'test/dal/integration/fixtures/integration-map.json';
 const testDal = createOmegaDalMock(testMapPath);
 const testRepo = new OmegaRepository(testDal);
 const baseMapField: OmegaField = {

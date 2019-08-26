@@ -1,11 +1,10 @@
 import { createOmegaDalMock } from './fixtures/omegaDalMocks';
 import { OmegaRepository } from '../../../src/repository/omegaRepository';
-import { IOmegaObject } from '../../../src/object';
 import { OmegaDalRecord, OmegaCriteria, OmegaCriterion } from '../../../src/dal';
 import { OmegaObject } from '../../../src/object/omegaObject';
 import { cloneDeep } from 'lodash';
 
-const testMapPath = 'test/repository/unit/fixtures/mapping-function-testMap.json';
+const testMapPath = 'test/dal/integration/fixtures/integration-map.json';
 
 describe('When using data access functions of an OmegaRepository', () => {
     describe('And calling persist with no return objects', () => {
@@ -246,7 +245,7 @@ async function runRetrieveManyTest(
     expect(updateSpy).toHaveBeenCalledTimes(0);
     expect(deleteSpy).toHaveBeenCalledTimes(0);
     if (expectedDalRecords.length > 0) {
-        actualOmegaObjects.forEach((actualOmegaObject: IOmegaObject, index: number) => {
+        actualOmegaObjects.forEach((actualOmegaObject: OmegaObject, index: number) => {
             const expectedOmegaObject = testRepo.mapRecordToObject(externalTableName, expectedDalRecords[index]);
             expect(actualOmegaObject).toStrictEqual(expectedOmegaObject);
         });
@@ -286,7 +285,7 @@ async function runRetrieveOneTest(
     }
 }
 
-async function runPersistTest(objectArray: Array<Partial<IOmegaObject>>, returnObjects?: boolean) {
+async function runPersistTest(objectArray: Array<Partial<OmegaObject>>, returnObjects?: boolean) {
     const preDal = createOmegaDalMock(testMapPath);
     const preRepo = new OmegaRepository(preDal);
     const createParam1Array: string[] = [];

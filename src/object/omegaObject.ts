@@ -3,7 +3,8 @@ import { IOmegaRepository } from '../repository';
 import { OmegaTableMap, OmegaField } from '../mapper';
 import { throwAssociationError, ErrorSource, ErrorSuffix } from '../common';
 import { OmegaTableLinkPath } from '../mapper';
-import { OmegaCriteria } from '../dal';
+import { OmegaCriteria, OmegaCriterionLinkTable } from '../dal';
+import { cloneDeep } from 'lodash';
 let sourceRepo: IOmegaRepository;
 
 export class OmegaObject {
@@ -24,7 +25,7 @@ export class OmegaObject {
         this.initTableMap();
         this.verifyChildAssociation(target, this.objectSource);
         const sortedMap = this.getParentChildAssociationMap(target, this.objectSource, true);
-        return this.retrieveTargetParent(sortedMap);
+        return this.retrieveTargetParent(target, sortedMap);
     }
     public async retrieveChildAssociations(target: string): Promise<OmegaObject[]> {
         this.initTableMap();
@@ -96,22 +97,43 @@ export class OmegaObject {
         });
         return sortedMap;
     }
-    private async retrieveTargetParent(sortedMap: OmegaTableLinkPath[]): Promise<OmegaObject> {
-        let parent: OmegaObject;
-        for (const linkPath of sortedMap) {
-            const parentId = (parent ? parent.objectData[linkPath.targetId] : this.objectData[linkPath.targetId]) as
-                | string
-                | number;
-            parent = await sourceRepo.retrieveOne(linkPath.sourceTable, parentId);
-            if (parent === null) {
-                break;
+    private buildBaseParentChildCriteria(linkPath: OmegaTableLinkPath): OmegaCriteria {
+        const linkCriteria = {
+            sourceField: linkPath.sourceId,
+            targetTable: linkPath.targetTable,
+            targetField: linkPath.targetId,
+            criteria: {}
+        };
+        return {
+            _and: [linkCriteria]
+        };
+    }
+    private buildParentChildDirectCriteria(linkPath: OmegaTableLinkPath): OmegaCriteria {
+        return { _and: [{ field: linkPath.sourceId, value: this.objectData[linkPath.targetId] }] };
+    }
+    private buildParentChildLinkCriteria(sortedMap: OmegaTableLinkPath[]): OmegaCriteria {
+        let criteria: OmegaCriteria;
+        if (sortedMap.length === 1) {
+            criteria = this.buildParentChildDirectCriteria(sortedMap[0]);
+        } else {
+            for (const linkPath of sortedMap) {
+                const tempCriteria = this.buildBaseParentChildCriteria(linkPath);
+                (tempCriteria._and[0] as OmegaCriterionLinkTable).criteria = criteria
+                    ? ((tempCriteria._and[0] as OmegaCriterionLinkTable).criteria = cloneDeep(criteria))
+                    : { _and: [{ field: this.tableMap.identity, value: this.objectData[this.tableMap.identity] }] };
+                criteria = tempCriteria;
             }
         }
+        return criteria;
+    }
+    private async retrieveTargetParent(target: string, sortedMap: OmegaTableLinkPath[]): Promise<OmegaObject> {
+        const criteria = this.buildParentChildLinkCriteria(sortedMap);
+        const parentResults = await sourceRepo.retrieveMany(target, criteria);
+        const parent = parentResults[0] ? parentResults[0] : null;
         return parent;
     }
     private async retrieveTargetChildren(sortedMap: OmegaTableLinkPath[]): Promise<OmegaObject[]> {
         let children: OmegaObject[];
-
         for (const linkPath of sortedMap) {
             let idList: Array<string | number>;
             if (children === undefined) {

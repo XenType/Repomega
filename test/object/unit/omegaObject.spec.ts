@@ -52,9 +52,6 @@ describe('When using functions of an IOmegaObject', () => {
                 expect(message).toEqual('Association Error = Company table map has no child association to Market');
             });
         });
-        // NEXT TODO: Update parent^1 tests to shorten call as shown below (line 58)
-        // DONE: SELECT * FROM market WHERE marketId = 2
-        // (DAL): SELECT * FROM market WHERE marketId IN (SELECT marketId FROM company WHERE companyId = 3)
         describe('When a parent^1 record association exists', () => {
             test('It interacts with the repository as expected', async () => {
                 const mockRepo = createOmegaRepoMock();
@@ -95,16 +92,7 @@ describe('When using functions of an IOmegaObject', () => {
                             sourceField: 'id',
                             targetTable: 'Company',
                             targetField: 'marketId',
-                            criteria: {
-                                _and: [
-                                    {
-                                        sourceField: 'id',
-                                        targetTable: 'User',
-                                        targetField: 'companyId',
-                                        criteria: { _and: [{ field: 'id', value: 10 }] }
-                                    }
-                                ]
-                            }
+                            criteria: { _and: [{ field: 'id', value: 3 }] }
                         }
                     ]
                 };
@@ -123,7 +111,7 @@ describe('When using functions of an IOmegaObject', () => {
                 const parent = await testObject.retrieveParentAssociation('Market');
                 expect(parent).toBeNull();
             });
-            xtest('And if the parent record does exist, it returns the expected OmegaObject', async () => {
+            test('And if the parent record does exist, it returns the expected OmegaObject', async () => {
                 const mockRepo = createOmegaRepoMock();
                 const grandParentObject = createTestObject(mockRepo, 'Master', 'USD', 5);
                 mockRepo.retrieveMany = async (source: string, criteria: OmegaCriteria): Promise<OmegaObject[]> => {
@@ -158,36 +146,23 @@ describe('When using functions of an IOmegaObject', () => {
                 expect(message).toEqual('Association Error = Company table map has no child association to Market');
             });
         });
-        // TODO: Use direct association paths for children
-        // SELECT * FROM User WHERE CompanyId = 2
-        // SELECT * FROM User WHERE CompanyId IN (SELECT CompanyId FROM Company WHERE MarketId = 1)
-
-        xdescribe('When a child^1 association exists', () => {
+        describe('When a child^1 association exists', () => {
             test('It interacts with the repository as expected', async () => {
                 const mockRepo = createOmegaRepoMock();
                 const spyContainer = createOmegaRepoSpies(mockRepo);
                 const testObject = createTestObject(mockRepo, 'Company', 10, 2);
-                const expectedCriteria = {
-                    _and: [
-                        {
-                            sourceField: 'id',
-                            targetTable: 'Company',
-                            targetField: 'marketId',
-                            criteria: { _and: [{ field: 'id', value: 1 }] }
-                        }
-                    ]
-                };
+                const expectedCriteria = { _and: [{ field: 'companyId', value: 2 }] };
                 await testObject.retrieveChildAssociations('User');
                 assertRepoUsageCounts(spyContainer, 0, 0, 1);
                 expect(spyContainer.spyRetrieveMany).toHaveBeenCalledWith('User', expectedCriteria);
             });
-            xtest('And no records are present, an empty array is returned', async () => {
+            test('And no records are present, an empty array is returned', async () => {
                 const mockRepo = createOmegaRepoMock();
                 const testObject = createTestObject(mockRepo, 'Company', 10, 2);
                 const children = await testObject.retrieveChildAssociations('User');
                 expect(children).toEqual([]);
             });
-            xtest('And records are present, the expected array is returned', async () => {
+            test('And records are present, the expected array is returned', async () => {
                 const mockRepo = createOmegaRepoMock();
                 const firstChild = createTestObject(mockRepo, 'User', 2, 1);
                 const secondChild = createTestObject(mockRepo, 'User', 2, 2);
@@ -201,78 +176,40 @@ describe('When using functions of an IOmegaObject', () => {
                 expect(children).toEqual(expectedChildren);
             });
         });
-        xdescribe('When a child^N association exists', () => {
-            test('And no child^1 records are present, an empty array is returned', async () => {
+        describe('When a child^N association exists', () => {
+            test('It interacts with the repository as expected', async () => {
+                const mockRepo = createOmegaRepoMock();
+                const spyContainer = createOmegaRepoSpies(mockRepo);
+                const testObject = createTestObject(mockRepo, 'Market', 'USD', 1);
+                const expectedCriteria = {
+                    _and: [
+                        {
+                            sourceField: 'companyId',
+                            targetField: 'id',
+                            targetTable: 'Company',
+                            criteria: { _and: [{ field: 'marketId', value: 1 }] }
+                        }
+                    ]
+                };
+                await testObject.retrieveChildAssociations('User');
+                assertRepoUsageCounts(spyContainer, 0, 0, 1);
+                expect(spyContainer.spyRetrieveMany).toHaveBeenCalledWith('User', expectedCriteria);
+            });
+            test('And no child^N records are present, an empty array is returned', async () => {
                 const mockRepo = createOmegaRepoMock();
                 const testObject = createTestObject(mockRepo, 'Market', 'USD', 1);
                 const children = await testObject.retrieveChildAssociations('User');
                 expect(children).toStrictEqual([]);
             });
-            test('And some child^1 records are present, it interacts with the repository as expected', async () => {
+            test('And child^N records are present, the expected array is returned', async () => {
                 const mockRepo = createOmegaRepoMock();
                 const testObject = createTestObject(mockRepo, 'Market', 'USD', 1);
-                const firstChild = createTestObject(mockRepo, 'Company', 1, 1);
-                const secondChild = createTestObject(mockRepo, 'Company', 1, 2);
-                mockRepo.retrieveMany = async (source: string, criteria: OmegaCriteria): Promise<OmegaObject[]> => {
-                    if (source === 'Company') {
-                        return [firstChild, secondChild];
-                    }
-                };
-                const spyContainer = createOmegaRepoSpies(mockRepo);
-                await testObject.retrieveChildAssociations('User');
-                assertRepoUsageCounts(spyContainer, 0, 0, 2);
-            });
-            test('And no child^2 records are present, an empty array is returned', async () => {
-                const mockRepo = createOmegaRepoMock();
-                const testObject = createTestObject(mockRepo, 'Market', 'USD', 1);
-                const firstChild = createTestObject(mockRepo, 'Company', 1, 1);
-                const secondChild = createTestObject(mockRepo, 'Company', 1, 2);
-                mockRepo.retrieveMany = async (source: string, criteria: OmegaCriteria): Promise<OmegaObject[]> => {
-                    if (source === 'Company') {
-                        return [firstChild, secondChild];
-                    }
-                    return [];
-                };
-                const result = await testObject.retrieveChildAssociations('User');
-                expect(result).toStrictEqual([]);
-            });
-            test('And some child^1 records yeild child^2 records, the expected array is returned', async () => {
-                const mockRepo = createOmegaRepoMock();
-                const testObject = createTestObject(mockRepo, 'Market', 'USD', 1);
-                const firstChild = createTestObject(mockRepo, 'Company', 1, 1);
-                const secondChild = createTestObject(mockRepo, 'Company', 1, 2);
-                const firstGrandChild = createTestObject(mockRepo, 'User', 1, 10);
-                const secondGrandChild = createTestObject(mockRepo, 'User', 1, 11);
-                const childResonse = [firstChild, secondChild];
-                const grandChildResonse = [firstGrandChild, secondGrandChild];
-                mockRepo.retrieveMany = async (source: string, criteria: OmegaCriteria): Promise<OmegaObject[]> => {
-                    if (source === 'Company') {
-                        return childResonse;
-                    } else if (source === 'User') {
-                        return grandChildResonse;
-                    }
-                    return [];
-                };
-                const result = await testObject.retrieveChildAssociations('User');
-                expect(result).toStrictEqual(grandChildResonse);
-            });
-            test('And multiple child^1 records yeild child^2 records, the expected array is returned', async () => {
-                const mockRepo = createOmegaRepoMock();
-                const testObject = createTestObject(mockRepo, 'Market', 'USD', 1);
-                const firstChild = createTestObject(mockRepo, 'Company', 1, 1);
-                const secondChild = createTestObject(mockRepo, 'Company', 1, 2);
                 const firstGrandChild = createTestObject(mockRepo, 'User', 1, 10);
                 const secondGrandChild = createTestObject(mockRepo, 'User', 1, 11);
                 const thirdGrandChild = createTestObject(mockRepo, 'User', 2, 12);
-                const childResonse = [firstChild, secondChild];
                 const grandChildResonse = [firstGrandChild, secondGrandChild, thirdGrandChild];
                 mockRepo.retrieveMany = async (source: string, criteria: OmegaCriteria): Promise<OmegaObject[]> => {
-                    if (source === 'Company') {
-                        return childResonse;
-                    } else if (source === 'User') {
-                        return grandChildResonse;
-                    }
-                    return [];
+                    return grandChildResonse;
                 };
                 const result = await testObject.retrieveChildAssociations('User');
                 expect(result).toStrictEqual(grandChildResonse);

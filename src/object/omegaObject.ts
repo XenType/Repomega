@@ -5,6 +5,7 @@ import { throwAssociationError, ErrorSource, ErrorSuffix } from '../common';
 import { OmegaTableLinkPath } from '../mapper';
 import { OmegaCriteria, OmegaCriterionLinkTable } from '../dal';
 import { cloneDeep } from 'lodash';
+import { start } from 'repl';
 let sourceRepo: IOmegaRepository;
 
 export class OmegaObject {
@@ -31,7 +32,7 @@ export class OmegaObject {
         this.initTableMap();
         this.verifyChildAssociation(this.objectSource, target);
         const sortedMap = this.getParentChildAssociationMap(this.objectSource, target);
-        return this.retrieveTargetChildren(sortedMap);
+        return this.retrieveTargetChildren(target, sortedMap);
     }
     public async retrieveLateralAssociations(target: string): Promise<OmegaObject[]> {
         this.initTableMap();
@@ -97,70 +98,50 @@ export class OmegaObject {
         });
         return sortedMap;
     }
-    private buildBaseParentChildCriteria(linkPath: OmegaTableLinkPath): OmegaCriteria {
-        const linkCriteria = {
-            sourceField: linkPath.sourceId,
-            targetTable: linkPath.targetTable,
-            targetField: linkPath.targetId,
-            criteria: {}
-        };
-        return {
-            _and: [linkCriteria]
-        };
-    }
-    private buildParentChildDirectCriteria(linkPath: OmegaTableLinkPath): OmegaCriteria {
-        return { _and: [{ field: linkPath.sourceId, value: this.objectData[linkPath.targetId] }] };
-    }
-    private buildParentChildLinkCriteria(sortedMap: OmegaTableLinkPath[]): OmegaCriteria {
-        let criteria: OmegaCriteria;
-        if (sortedMap.length === 1) {
-            criteria = this.buildParentChildDirectCriteria(sortedMap[0]);
-        } else {
-            for (const linkPath of sortedMap) {
-                const tempCriteria = this.buildBaseParentChildCriteria(linkPath);
-                (tempCriteria._and[0] as OmegaCriterionLinkTable).criteria = criteria
-                    ? ((tempCriteria._and[0] as OmegaCriterionLinkTable).criteria = cloneDeep(criteria))
-                    : { _and: [{ field: this.tableMap.identity, value: this.objectData[this.tableMap.identity] }] };
-                criteria = tempCriteria;
-            }
-        }
-        return criteria;
-    }
     private async retrieveTargetParent(target: string, sortedMap: OmegaTableLinkPath[]): Promise<OmegaObject> {
-        const criteria = this.buildParentChildLinkCriteria(sortedMap);
+        const criteria = this.buildParentChildLinkCriteria(sortedMap, true);
         const parentResults = await sourceRepo.retrieveMany(target, criteria);
         const parent = parentResults[0] ? parentResults[0] : null;
         return parent;
     }
-    private async retrieveTargetChildren(sortedMap: OmegaTableLinkPath[]): Promise<OmegaObject[]> {
-        let children: OmegaObject[];
-        for (const linkPath of sortedMap) {
-            let idList: Array<string | number>;
-            if (children === undefined) {
-                idList = [this.objectData[this.tableMap.identity] as string | number];
-            } else if (children === []) {
-                return [];
-            } else {
-                idList = children.map(child => {
-                    return child.objectData[linkPath.sourceId] as string | number;
-                });
-            }
-            children = await this.retrieveNextLevelChildAssociations(idList, linkPath);
-        }
+    private async retrieveTargetChildren(target: string, sortedMap: OmegaTableLinkPath[]): Promise<OmegaObject[]> {
+        const criteria = this.buildParentChildLinkCriteria(sortedMap);
+        const children = await sourceRepo.retrieveMany(target, criteria);
         return children;
     }
-    private async retrieveNextLevelChildAssociations(
-        targetIds: Array<string | number>,
-        linkPath: OmegaTableLinkPath
-    ): Promise<OmegaObject[]> {
-        const criteria: OmegaCriteria = {
-            _or: []
-        };
-        for (const targetId of targetIds) {
-            const criterion = { field: linkPath.targetId, value: targetId };
-            criteria._or.push(criterion);
+    private buildParentChildLinkCriteria(sortedMap: OmegaTableLinkPath[], startFromChild?: boolean): OmegaCriteria {
+        let criteria: OmegaCriteria;
+        for (const linkPath of sortedMap) {
+            if (!criteria) {
+                criteria = this.buildParentChildDirectCriteria(linkPath, startFromChild);
+            } else {
+                criteria = this.buildParentChildIndirectCriteria(linkPath, criteria, startFromChild);
+            }
         }
-        const children = await sourceRepo.retrieveMany(linkPath.targetTable, criteria);
-        return children;
+        return criteria;
+    }
+    private buildParentChildDirectCriteria(linkPath: OmegaTableLinkPath, startFromChild?: boolean): OmegaCriteria {
+        const field = startFromChild ? linkPath.sourceId : linkPath.targetId;
+        const value = startFromChild ? this.objectData[linkPath.targetId] : this.objectData[linkPath.sourceId];
+        return this.buildStandardCriteria(field, value);
+    }
+    private buildStandardCriteria(field: string, value: string | number | Date) {
+        return { _and: [{ field, value }] };
+    }
+    private buildParentChildIndirectCriteria(
+        linkPath: OmegaTableLinkPath,
+        criteria: OmegaCriteria | undefined,
+        startFromChild?: boolean
+    ): OmegaCriteria {
+        const parentCriteria = this.buildParentChildBaseCriteria(linkPath, startFromChild) as OmegaCriteria;
+        (parentCriteria._and[0] as OmegaCriterionLinkTable).criteria = cloneDeep(criteria);
+        return parentCriteria;
+    }
+    private buildParentChildBaseCriteria(linkPath: OmegaTableLinkPath, startFromChild): OmegaCriteria {
+        const sourceField = startFromChild ? linkPath.sourceId : linkPath.targetId;
+        const targetTable = startFromChild ? linkPath.targetTable : linkPath.sourceTable;
+        const targetField = startFromChild ? linkPath.targetId : linkPath.sourceId;
+        const linkCriteria = { sourceField, targetTable, targetField, criteria: {} };
+        return { _and: [linkCriteria] };
     }
 }

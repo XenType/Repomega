@@ -2,7 +2,7 @@ import { OmegaObjectData } from '.';
 import { IOmegaRepository } from '../repository';
 import { OmegaTableMap, OmegaField } from '../mapper';
 import { throwAssociationError, ErrorSource, ErrorSuffix } from '../common';
-import { OmegaTableLinkPath } from '../mapper';
+import { OmegaLinkPath } from '../mapper';
 import { OmegaCriteria, OmegaCriterionLinkTable } from '../dal';
 import { cloneDeep } from 'lodash';
 import { start } from 'repl';
@@ -22,40 +22,37 @@ export class OmegaObject {
         this.objectData = savedObjects[0].objectData;
         return;
     }
-    public async retrieveParentAssociation(target: string): Promise<OmegaObject> {
-        this.initTableMap();
-        this.verifyChildAssociation(target, this.objectSource);
-        const sortedMap = this.getParentChildAssociationMap(target, this.objectSource, true);
-        return this.retrieveTargetParent(target, sortedMap);
-    }
-    public async retrieveChildAssociations(target: string): Promise<OmegaObject[]> {
-        this.initTableMap();
-        this.verifyChildAssociation(this.objectSource, target);
-        const sortedMap = this.getParentChildAssociationMap(this.objectSource, target);
-        return this.retrieveTargetChildren(target, sortedMap);
-    }
-    public async retrieveLateralAssociations(target: string): Promise<OmegaObject[]> {
-        this.initTableMap();
-        this.verifyLateralAssociation(target);
-        return null;
-    }
-    private buildLateralAssociationLookupCriteria(target: string): OmegaCriteria {
-        //
-        return null;
-    }
-    public async createLateralAssociation(target: string, objectId: string | number): Promise<void> {
-        this.initTableMap();
-        return null;
-    }
-    public async deleteLateralAssociation(target: string, objectId: string | number): Promise<void> {
-        this.initTableMap();
-        return null;
-    }
     public async validatePassword(mapField: OmegaField, password: string): Promise<boolean> {
         return false;
     }
     public async modifyInternalField(mapField: OmegaField, value: string): Promise<boolean> {
         return false;
+    }
+    public async retrieveParentObject(parent: string): Promise<OmegaObject> {
+        this.initTableMap();
+        this.verifyChildAssociation(parent, this.objectSource);
+        const sortedMap = this.getChildAssociationMap(parent, this.objectSource, true);
+        return this.retrieveOneToOne(parent, sortedMap, true);
+    }
+    public async retrieveChildObjects(child: string): Promise<OmegaObject[]> {
+        this.initTableMap();
+        this.verifyChildAssociation(this.objectSource, child);
+        const sortedMap = this.getChildAssociationMap(this.objectSource, child);
+        return this.retrieveOneToMany(child, sortedMap);
+    }
+    public async retrieveLateralObjects(target: string): Promise<OmegaObject[]> {
+        this.initTableMap();
+        this.verifyLateralAssociation(target);
+        const sortedMap = this.getLateralAssociationMap(target);
+        return this.retrieveOneToMany(target, sortedMap);
+    }
+    public async createLateralLink(target: string, objectId: string | number): Promise<void> {
+        this.initTableMap();
+        return null;
+    }
+    public async deleteLateralLink(target: string, objectId: string | number): Promise<void> {
+        this.initTableMap();
+        return null;
     }
     private initTableMap(): void {
         if (!this.tableMap) {
@@ -86,62 +83,72 @@ export class OmegaObject {
         }
         return;
     }
-    private getParentChildAssociationMap(
-        parent: string,
-        child: string,
-        startFromChild?: boolean
-    ): OmegaTableLinkPath[] {
-        const { childAssociations } = sourceRepo.getTableMap(parent);
-        const associationMap = childAssociations[child];
-        const sortedMap = associationMap.sort((a: OmegaTableLinkPath, b: OmegaTableLinkPath) => {
-            return startFromChild ? a.sequence - b.sequence : b.sequence - a.sequence;
+    private getLateralAssociationMap(target: string): OmegaLinkPath[] {
+        const associationMap = this.tableMap.lateralAssociations[target];
+        const sortedMap = associationMap.sort((a: OmegaLinkPath, b: OmegaLinkPath) => {
+            return a.sequence - b.sequence;
         });
         return sortedMap;
     }
-    private async retrieveTargetParent(target: string, sortedMap: OmegaTableLinkPath[]): Promise<OmegaObject> {
-        const criteria = this.buildParentChildLinkCriteria(sortedMap, true);
-        const parentResults = await sourceRepo.retrieveMany(target, criteria);
-        const parent = parentResults[0] ? parentResults[0] : null;
-        return parent;
+    private getChildAssociationMap(parent: string, child: string, reversePath?: boolean): OmegaLinkPath[] {
+        const { childAssociations } = sourceRepo.getTableMap(parent);
+        const associationMap = childAssociations[child];
+        const sortedMap = associationMap.sort((a: OmegaLinkPath, b: OmegaLinkPath) => {
+            return reversePath ? a.sequence - b.sequence : b.sequence - a.sequence;
+        });
+        return sortedMap;
     }
-    private async retrieveTargetChildren(target: string, sortedMap: OmegaTableLinkPath[]): Promise<OmegaObject[]> {
-        const criteria = this.buildParentChildLinkCriteria(sortedMap);
-        const children = await sourceRepo.retrieveMany(target, criteria);
-        return children;
+    private async retrieveOneToOne(
+        target: string,
+        sortedMap: OmegaLinkPath[],
+        reversePath?: boolean
+    ): Promise<OmegaObject> {
+        const results = await this.retrieveOneToMany(target, sortedMap, reversePath);
+        const result = results[0] ? results[0] : null;
+        return result;
     }
-    private buildParentChildLinkCriteria(sortedMap: OmegaTableLinkPath[], startFromChild?: boolean): OmegaCriteria {
+    private async retrieveOneToMany(
+        target: string,
+        sortedMap: OmegaLinkPath[],
+        reversePath?: boolean
+    ): Promise<OmegaObject[]> {
+        const criteria = this.buildOmegaCriteria(sortedMap, reversePath);
+        const results = await sourceRepo.retrieveMany(target, criteria);
+        return results;
+    }
+    private buildOmegaCriteria(sortedMap: OmegaLinkPath[], reversePath?: boolean): OmegaCriteria {
         let criteria: OmegaCriteria;
         for (const linkPath of sortedMap) {
             if (!criteria) {
-                criteria = this.buildParentChildDirectCriteria(linkPath, startFromChild);
+                criteria = this.buildDirectLinkCriteria(linkPath, reversePath);
             } else {
-                criteria = this.buildParentChildIndirectCriteria(linkPath, criteria, startFromChild);
+                criteria = this.buildIndirectLinkCriteria(linkPath, criteria, reversePath);
             }
         }
         return criteria;
     }
-    private buildParentChildDirectCriteria(linkPath: OmegaTableLinkPath, startFromChild?: boolean): OmegaCriteria {
-        const field = startFromChild ? linkPath.sourceId : linkPath.targetId;
-        const value = startFromChild ? this.objectData[linkPath.targetId] : this.objectData[linkPath.sourceId];
+    private buildDirectLinkCriteria(linkPath: OmegaLinkPath, reversePath?: boolean): OmegaCriteria {
+        const field = reversePath ? linkPath.sourceId : linkPath.targetId;
+        const value = reversePath ? this.objectData[linkPath.targetId] : this.objectData[linkPath.sourceId];
         return this.buildStandardCriteria(field, value);
     }
-    private buildStandardCriteria(field: string, value: string | number | Date) {
-        return { _and: [{ field, value }] };
-    }
-    private buildParentChildIndirectCriteria(
-        linkPath: OmegaTableLinkPath,
+    private buildIndirectLinkCriteria(
+        linkPath: OmegaLinkPath,
         criteria: OmegaCriteria | undefined,
-        startFromChild?: boolean
+        reversePath?: boolean
     ): OmegaCriteria {
-        const parentCriteria = this.buildParentChildBaseCriteria(linkPath, startFromChild) as OmegaCriteria;
+        const parentCriteria = this.buildBaseLinkCriteria(linkPath, reversePath) as OmegaCriteria;
         (parentCriteria._and[0] as OmegaCriterionLinkTable).criteria = cloneDeep(criteria);
         return parentCriteria;
     }
-    private buildParentChildBaseCriteria(linkPath: OmegaTableLinkPath, startFromChild): OmegaCriteria {
-        const sourceField = startFromChild ? linkPath.sourceId : linkPath.targetId;
-        const targetTable = startFromChild ? linkPath.targetTable : linkPath.sourceTable;
-        const targetField = startFromChild ? linkPath.targetId : linkPath.sourceId;
+    private buildBaseLinkCriteria(linkPath: OmegaLinkPath, reversePath?: boolean): OmegaCriteria {
+        const sourceField = reversePath ? linkPath.sourceId : linkPath.targetId;
+        const targetTable = reversePath ? linkPath.targetTable : linkPath.sourceTable;
+        const targetField = reversePath ? linkPath.targetId : linkPath.sourceId;
         const linkCriteria = { sourceField, targetTable, targetField, criteria: {} };
         return { _and: [linkCriteria] };
+    }
+    private buildStandardCriteria(field: string, value: string | number | Date) {
+        return { _and: [{ field, value }] };
     }
 }

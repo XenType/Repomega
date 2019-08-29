@@ -14,7 +14,10 @@ export function createTestObject(
 ): OmegaObject {
     const testObject = new OmegaObject(repo);
     testObject.objectSource = source;
-    testObject.objectData.name = 'Test ' + source;
+    testObject.objectData.name = `Test ${source}`;
+    if (identityValue) {
+        testObject.objectData.name += ` ${identityValue}`;
+    }
     switch (source) {
         case 'Market':
             testObject.objectData.currencyType = secondValue as string;

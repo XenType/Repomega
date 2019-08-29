@@ -5,7 +5,11 @@ import { OmegaObject } from '../../../src/object/omegaObject';
 import { cloneDeep } from 'lodash';
 
 const testMapPath = 'test/dal/integration/fixtures/integration-map.json';
-
+// NEXT TODOS
+// Clean this up by elevating createTestObject fixtures
+// Also consider implementing a common repo spy function
+// Add tests for persistLateralLink
+// Add tests for deleteLateralLink
 describe('When using data access functions of an OmegaRepository', () => {
     describe('And calling persist with no return objects', () => {
         test('When passed a single new object, it interacts with the DAL as expected', async () => {

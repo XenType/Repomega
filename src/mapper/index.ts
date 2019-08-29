@@ -45,9 +45,9 @@ export interface OmegaFieldRequiredCharacters {
     symbol?: boolean;
 }
 export interface OmegaTableLinks {
-    [key: string]: OmegaTableLinkPath[];
+    [key: string]: OmegaLinkPath[];
 }
-export interface OmegaTableLinkPath {
+export interface OmegaLinkPath {
     sourceTable: string;
     sourceId: string;
     targetTable: string;

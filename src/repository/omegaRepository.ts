@@ -1,6 +1,6 @@
 import { IOmegaRepository, ValidationField } from '.';
 import { OmegaCriteria, IOmegaDal, OmegaDalRecord, OmegaCriterion, OmegaCriterionLinkTable } from '../dal';
-import { IOmegaMapper, OmegaField } from '../mapper';
+import { IOmegaMapper, OmegaField, OmegaLinkPath } from '../mapper';
 import { ErrorSource, ErrorSuffix, throwStandardError, throwFieldValidationError } from '../common';
 import { OmegaTableMap } from '../mapper';
 import { OmegaObjectData } from '../object';
@@ -21,19 +21,10 @@ export class OmegaRepository implements IOmegaRepository {
     ): Promise<void | OmegaObject[]> {
         const affectedObjects: OmegaObject[] = [];
         for (const omegaObject of externalObjects) {
-            const record = this.mapObjectToRecord(omegaObject);
-            const tableMap = this.getTableMap(omegaObject.objectSource);
-            let identityValue = this.getRecordIdentityValue(tableMap, record);
-            if (identityValue === undefined) {
-                identityValue = await omegaDal.create(tableMap.name, record);
-            } else {
-                const identityCriteria = this.createIdentityCriteria(omegaObject.objectSource, identityValue);
-                await omegaDal.update(tableMap.name, record, identityCriteria);
-            }
+            const identityValue = await this.createOrUpdateObject(omegaObject);
             if (returnObjects) {
-                const criteria = this.createIdentityCriteria(omegaObject.objectSource, identityValue);
-                const records = await omegaDal.read(tableMap.name, criteria);
-                affectedObjects.push(this.mapRecordToObject(omegaObject.objectSource, records[0]));
+                const affectedObject = await this.requestAffectedObject(omegaObject.objectSource, identityValue);
+                affectedObjects.push(affectedObject);
             }
         }
         if (returnObjects) {
@@ -41,6 +32,13 @@ export class OmegaRepository implements IOmegaRepository {
         }
         return;
     }
+    // public async persistTableLink(
+    //     targetTable: string,
+    //     targetId: string | number,
+    //     sourceId: string | number
+    // ): Promise<void> {
+    //     //
+    // }
     public async retrieveOne(source: string, objectId: string | number): Promise<OmegaObject> {
         const identityCriteria = this.createIdentityCriteria(source, objectId);
         const tableMap = this.getTableMap(source);
@@ -76,6 +74,13 @@ export class OmegaRepository implements IOmegaRepository {
         const affectedRecords = await omegaDal.delete(tableMap.name, omegaCriteria);
         return affectedRecords;
     }
+    // public async deleteTableLink(
+    //     targetTable: string,
+    //     targetId: string | number,
+    //     sourceId: string | number
+    // ): Promise<void> {
+    //     //
+    // }
     public getTableMap(source: string): OmegaTableMap {
         return omegaMapper.getTableMap(source);
     }
@@ -162,6 +167,24 @@ export class OmegaRepository implements IOmegaRepository {
         return idCriteria;
     }
     // private refactored functions
+    private async createOrUpdateObject(omegaObject: Partial<OmegaObject>): Promise<string | number> {
+        const record = this.mapObjectToRecord(omegaObject);
+        const tableMap = this.getTableMap(omegaObject.objectSource);
+        let identityValue = this.getRecordIdentityValue(tableMap, record);
+        if (identityValue === undefined) {
+            identityValue = await omegaDal.create(tableMap.name, record);
+        } else {
+            const identityCriteria = this.createIdentityCriteria(omegaObject.objectSource, identityValue);
+            await omegaDal.update(tableMap.name, record, identityCriteria);
+        }
+        return identityValue;
+    }
+    private async requestAffectedObject(source: string, sourceId: string | number): Promise<OmegaObject> {
+        const tableMap = this.getTableMap(source);
+        const criteria = this.createIdentityCriteria(source, sourceId);
+        const records = await omegaDal.read(tableMap.name, criteria);
+        return this.mapRecordToObject(source, records[0]);
+    }
     private isMinLengthSatisfied(fieldValue: string | number | Date, minLength: number): boolean {
         return !((fieldValue as string).length < minLength);
     }

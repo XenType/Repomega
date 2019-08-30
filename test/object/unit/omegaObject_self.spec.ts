@@ -1,8 +1,7 @@
 import { createOmegaRepoMock, createOmegaRepoSpies, assertRepoUsageCounts } from './fixtures/omegaRepoMocks';
 import { OmegaObject } from '../../../src/object/omegaObject';
 import { cloneDeep } from 'lodash';
-import { createTestObject } from './fixtures';
-import { OmegaCriteria } from '../../../src/dal';
+import { createTestObject } from '../../fixtures';
 
 describe('When using functions of an IOmegaObject', () => {
     describe('And calling save', () => {

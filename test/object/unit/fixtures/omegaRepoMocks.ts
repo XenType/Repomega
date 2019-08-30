@@ -20,13 +20,28 @@ export function assertRepoUsageCounts(
     retrieveMany?: number,
     deleteOne?: number,
     deleteMany?: number
+    // persistLink?: number,
+    // deleteLink?: number
 ): void {
-    const { spyPersist, spyRetrieveOne, spyRetrieveMany, spyDeleteOne, spyDeleteMany } = spyContainer;
+    const {
+        spyPersist,
+        spyRetrieveOne,
+        spyRetrieveMany,
+        spyDeleteOne,
+        spyDeleteMany
+        // spyPersistLink,
+        // spyDeleteLink
+    } = spyContainer;
     if (persist) {
         expect(spyPersist).toHaveBeenCalledTimes(persist);
     } else {
         expect(spyPersist).toHaveBeenCalledTimes(0);
     }
+    // if (persistLink) {
+    //     expect(spyPersistLink).toHaveBeenCalledTimes(persistLink);
+    // } else {
+    //     expect(spyPersistLink).toHaveBeenCalledTimes(0);
+    // }
     if (retrieveOne) {
         expect(spyRetrieveOne).toHaveBeenCalledTimes(retrieveOne);
     } else {
@@ -47,6 +62,11 @@ export function assertRepoUsageCounts(
     } else {
         expect(spyDeleteMany).toHaveBeenCalledTimes(0);
     }
+    // if (deleteLink) {
+    //     expect(spyDeleteLink).toHaveBeenCalledTimes(deleteLink);
+    // } else {
+    //     expect(spyDeleteLink).toHaveBeenCalledTimes(0);
+    // }
 }
 
 export function createOmegaRepoSpies(mockRepo: IOmegaRepository): RepoSpies {
@@ -55,7 +75,9 @@ export function createOmegaRepoSpies(mockRepo: IOmegaRepository): RepoSpies {
     const spyRetrieveMany = jest.spyOn(mockRepo, 'retrieveMany');
     const spyDeleteOne = jest.spyOn(mockRepo, 'deleteOne');
     const spyDeleteMany = jest.spyOn(mockRepo, 'deleteMany');
-    return { spyPersist, spyRetrieveOne, spyRetrieveMany, spyDeleteOne, spyDeleteMany };
+    // const spyPersistLink = jest.spyOn(mockRepo, 'persistTableLink');
+    // const spyDeleteLink = jest.spyOn(mockRepo, 'deleteTableLink');
+    return { spyPersist, spyRetrieveOne, spyRetrieveMany, spyDeleteOne, spyDeleteMany }; // , spyPersistLink, spyDeleteLink };
 }
 
 export type RepoSpies = {
@@ -64,6 +86,8 @@ export type RepoSpies = {
     spyRetrieveMany: any;
     spyDeleteOne: any;
     spyDeleteMany: any;
+    // spyPersistLink: any;
+    // spyDeleteLink: any;
 };
 
 export function createOmegaRepoMock(
@@ -72,6 +96,8 @@ export function createOmegaRepoMock(
     _retrieveMany?: RepositoryGetMany,
     _deleteOne?: RepositoryActSingle,
     _deleteMany?: RepositoryActMany
+    // _persistLink?: RepositoryTableLink,
+    // _deleteLink?: RepositoryTableLink
 ): IOmegaRepository {
     const tableMapper = new FlatMapper(testMapPath);
     const mockOmegaRepository = new MockOmegaRepository(tableMapper);
@@ -90,6 +116,13 @@ export function createOmegaRepoMock(
     if (_deleteMany) {
         mockOmegaRepository.deleteMany = _deleteMany;
     }
+    // if (_persistLink) {
+    //     mockOmegaRepository.persistTableLink = _persistLink;
+    // }
+    // if (_deleteLink) {
+    //     mockOmegaRepository.deleteTableLink = _deleteLink;
+    // }
+
     return mockOmegaRepository;
 }
 class MockOmegaRepository implements IOmegaRepository {
@@ -103,6 +136,13 @@ class MockOmegaRepository implements IOmegaRepository {
         }
         return;
     };
+    // public persistTableLink: RepositoryTableLink = async (
+    //     a: string,
+    //     b: string | number,
+    //     c: string | number
+    // ): Promise<void> => {
+    //     return;
+    // };
     public retrieveOne: RepositoryGetSingle = async (a: string, b: string | number): Promise<OmegaObject> => {
         return null;
     };
@@ -115,6 +155,13 @@ class MockOmegaRepository implements IOmegaRepository {
     public deleteMany: RepositoryActMany = async (a: string, b: OmegaCriteria): Promise<number> => {
         return 0;
     };
+    // public deleteTableLink: RepositoryTableLink = async (
+    //     a: string,
+    //     b: string | number,
+    //     c: string | number
+    // ): Promise<void> => {
+    //     return;
+    // };
     public getTableMap = (source: string): OmegaTableMap => {
         return this.tableMapper.getTableMap(source);
     };

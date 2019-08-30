@@ -1,129 +1,49 @@
-import { createOmegaDalMock } from './fixtures/omegaDalMocks';
+import { createOmegaDalMock, createOmegaDalSpies, assertDalUsageCounts } from './fixtures/omegaDalMocks';
 import { OmegaRepository } from '../../../src/repository/omegaRepository';
-import { OmegaDalRecord, OmegaCriteria, OmegaCriterion } from '../../../src/dal';
+import { OmegaDalRecord, OmegaCriteria, OmegaCriterion, OmegaCriterionLinkTable } from '../../../src/dal';
 import { OmegaObject } from '../../../src/object/omegaObject';
+import { createTestObject, createOrCriteria } from '../../fixtures';
 import { cloneDeep } from 'lodash';
 
 const testMapPath = 'test/dal/integration/fixtures/integration-map.json';
-// NEXT TODOS
-// Clean this up by elevating createTestObject fixtures
-// Also consider implementing a common repo spy function
-// Add tests for persistLateralLink
-// Add tests for deleteLateralLink
+
 describe('When using data access functions of an OmegaRepository', () => {
     describe('And calling persist with no return objects', () => {
         test('When passed a single new object, it interacts with the DAL as expected', async () => {
-            const testObject = new OmegaObject(undefined);
-            testObject.objectSource = 'Market';
-            testObject.objectData = {
-                name: 'Midstate',
-                currencyType: 'USD'
-            };
+            const testObject = createTestObject(undefined, 'Market', 'USD', 1);
             await runPersistTest([testObject]);
         });
-
         test('When passed a multiple new objects, it interacts with the DAL as expected', async () => {
-            const testObject1 = new OmegaObject(undefined);
-            testObject1.objectSource = 'Market';
-            testObject1.objectData = {
-                name: 'Upstate',
-                currencyType: 'USD'
-            };
-            const testObject2 = new OmegaObject(undefined);
-            testObject2.objectSource = 'Market';
-            testObject2.objectData = {
-                name: 'Downstate',
-                currencyType: 'USD'
-            };
+            const testObject1 = createTestObject(undefined, 'Market', 'USD', 1);
+            const testObject2 = createTestObject(undefined, 'Market', 'USD', 2);
             await runPersistTest([testObject1, testObject2]);
         });
         test('When passed a single existing object, it interacts with the DAL as expected', async () => {
-            const testObject = new OmegaObject(undefined);
-            testObject.objectSource = 'Market';
-            testObject.objectData = {
-                id: 1,
-                name: 'Midstate',
-                currencyType: 'USD'
-            };
+            const testObject = createTestObject(undefined, 'Market', 'USD', 1);
             await runPersistTest([testObject]);
         });
         test('When passed a mix of new and existing objects, it interacts with the DAL as expected', async () => {
-            const testObject1 = new OmegaObject(undefined);
-            testObject1.objectSource = 'Market';
-            testObject1.objectData = {
-                id: 1,
-                name: 'Midstate',
-                currencyType: 'USD'
-            };
-            const testObject2 = new OmegaObject(undefined);
-            testObject2.objectSource = 'Market';
-            testObject2.objectData = {
-                id: 2,
-                name: 'Upstate',
-                currencyType: 'USD'
-            };
-            const testObject3 = new OmegaObject(undefined);
-            testObject3.objectSource = 'Market';
-            testObject3.objectData = {
-                name: 'Downstate',
-                currencyType: 'USD'
-            };
-            const testObject4 = new OmegaObject(undefined);
-            testObject4.objectSource = 'Market';
-            testObject4.objectData = {
-                name: 'Out of state',
-                currencyType: 'GBP'
-            };
+            const testObject1 = createTestObject(undefined, 'Market', 'USD', 1);
+            const testObject2 = createTestObject(undefined, 'Market', 'USD', 2);
+            const testObject3 = createTestObject(undefined, 'Market', 'USD', 3);
+            const testObject4 = createTestObject(undefined, 'Market', 'GBP', 4);
             await runPersistTest([testObject1, testObject2, testObject3, testObject4]);
         });
     });
     describe('And calling persist with return objects requested', () => {
         test('When passed a single new object, it interacts with the DAL as expected', async () => {
-            const testObject = new OmegaObject(undefined);
-            testObject.objectSource = 'Market';
-            testObject.objectData = {
-                name: 'Midstate',
-                currencyType: 'USD'
-            };
+            const testObject = createTestObject(undefined, 'Market', 'USD', 1);
             await runPersistTest([testObject], true);
         });
         test('When passed a single existing object, it interacts with the DAL as expected', async () => {
-            const testObject = new OmegaObject(undefined);
-            testObject.objectSource = 'Market';
-            testObject.objectData = {
-                id: 1,
-                name: 'Midstate',
-                currencyType: 'USD'
-            };
+            const testObject = createTestObject(undefined, 'Market', 'USD', 1);
             await runPersistTest([testObject], true);
         });
         test('When passed a mix of new and existing objects from different source tables, it interacts with the DAL as expected', async () => {
-            const testObject1 = new OmegaObject(undefined);
-            testObject1.objectSource = 'Market';
-            testObject1.objectData = {
-                id: 1,
-                name: 'Midstate',
-                currencyType: 'USD'
-            };
-            const testObject2 = new OmegaObject(undefined);
-            testObject2.objectSource = 'Market';
-            testObject2.objectData = {
-                id: 2,
-                name: 'Upstate',
-                currencyType: 'USD'
-            };
-            const testObject3 = new OmegaObject(undefined);
-            testObject3.objectSource = 'Company';
-            testObject3.objectData = {
-                name: 'Generic Co',
-                marketId: 1
-            };
-            const testObject4 = new OmegaObject(undefined);
-            (testObject4.objectSource = 'Market'),
-                (testObject4.objectData = {
-                    name: 'Out of state',
-                    currencyType: 'GBP'
-                });
+            const testObject1 = createTestObject(undefined, 'Market', 'USD', 1);
+            const testObject2 = createTestObject(undefined, 'Market', 'USD', 2);
+            const testObject3 = createTestObject(undefined, 'Company', 1);
+            const testObject4 = createTestObject(undefined, 'Market', 'GBP');
             await runPersistTest([testObject1, testObject2, testObject3, testObject4], true);
         });
     });
@@ -150,9 +70,7 @@ describe('When using data access functions of an OmegaRepository', () => {
     describe('And calling retrieveMany with criteria that yields results', () => {
         test('It interacts with the DAL as expected and returns an array of valid objects', async () => {
             const expectedTableName = 'Market';
-            const externalCriteria: OmegaCriteria = {
-                _or: [{ field: 'currencyType', value: 'USD' }, { field: 'name', value: 'Also Included' }]
-            };
+            const externalCriteria = createOrCriteria(['currencyType', 'name'], ['USD', 'Also Included']);
             const expectedDalRecords = [
                 { test_market_id: 1, market_name: 'Upstate', currency: 'USD' },
                 { test_market_id: 2, market_name: 'Upstate', currency: 'USD' },
@@ -164,9 +82,7 @@ describe('When using data access functions of an OmegaRepository', () => {
     describe('And calling retrieveMany with criteria that does not yield results', () => {
         test('It interacts with the DAL as expected and returns an array of valid objects', async () => {
             const expectedTableName = 'Market';
-            const externalCriteria: OmegaCriteria = {
-                _and: [{ field: 'currencyType', value: 'USD' }, { field: 'name', value: 'Also Included' }]
-            };
+            const externalCriteria = createOrCriteria(['currencyType', 'name'], ['USD', 'Also Included']);
             const expectedDalRecords = [];
             await runRetrieveManyTest(expectedTableName, externalCriteria, expectedDalRecords);
         });
@@ -179,19 +95,13 @@ describe('When using data access functions of an OmegaRepository', () => {
                 return 1;
             };
             const mockDal = createOmegaDalMock(testMapPath, undefined, undefined, undefined, mockDalDelete);
-            const createSpy = jest.spyOn(mockDal, 'create');
-            const readSpy = jest.spyOn(mockDal, 'read');
-            const updateSpy = jest.spyOn(mockDal, 'update');
-            const deleteSpy = jest.spyOn(mockDal, 'delete');
+            const spyContainer = createOmegaDalSpies(mockDal);
             const testRepo = new OmegaRepository(mockDal);
             const actualResult = await testRepo.deleteOne(externalTableName, targetRecordId);
             const expectedTableName = testRepo.getTableMap(externalTableName).name;
-            expect(createSpy).toHaveBeenCalledTimes(0);
-            expect(readSpy).toHaveBeenCalledTimes(0);
-            expect(updateSpy).toHaveBeenCalledTimes(0);
-            expect(deleteSpy).toHaveBeenCalledTimes(1);
             const expectedOmegaCriteria = testRepo.createIdentityCriteria(externalTableName, targetRecordId);
-            expect(deleteSpy).toHaveBeenCalledWith(expectedTableName, expectedOmegaCriteria);
+            assertDalUsageCounts(spyContainer, 0, 0, 0, 1);
+            expect(spyContainer.spyDelete).toHaveBeenCalledWith(expectedTableName, expectedOmegaCriteria);
             expect(actualResult).toEqual(1);
         });
     });
@@ -205,25 +115,45 @@ describe('When using data access functions of an OmegaRepository', () => {
                 return 6;
             };
             const mockDal = createOmegaDalMock(testMapPath, undefined, undefined, undefined, mockDalDelete);
-            const createSpy = jest.spyOn(mockDal, 'create');
-            const readSpy = jest.spyOn(mockDal, 'read');
-            const updateSpy = jest.spyOn(mockDal, 'update');
-            const deleteSpy = jest.spyOn(mockDal, 'delete');
+            const spyContainer = createOmegaDalSpies(mockDal);
             const testRepo = new OmegaRepository(mockDal);
-            const actualResult = await testRepo.deleteMany(externalTableName, externalCriteria);
             const expectedTableName = testRepo.getTableMap(externalTableName).name;
-            expect(createSpy).toHaveBeenCalledTimes(0);
-            expect(readSpy).toHaveBeenCalledTimes(0);
-            expect(updateSpy).toHaveBeenCalledTimes(0);
-            expect(deleteSpy).toHaveBeenCalledTimes(1);
             const expectedOmegaCriteria = testRepo.mapExternalCriteriaToDalCriteria(
                 externalTableName,
                 externalCriteria
             );
-            expect(deleteSpy).toHaveBeenCalledWith(expectedTableName, expectedOmegaCriteria);
+            const actualResult = await testRepo.deleteMany(externalTableName, externalCriteria);
+            expect(spyContainer.spyDelete).toHaveBeenCalledWith(expectedTableName, expectedOmegaCriteria);
             expect(actualResult).toEqual(6);
         });
     });
+    // describe('And calling persistTableLink', () => {
+    //     describe('When a table link already exists', () => {
+    //         xtest('It interacts with the DAL as expected', async () => {
+    //             const externalTargetTable = 'OptionGroup';
+    //             const expectedTargetId = 1;
+    //             const expectedSourceId = 2;
+    //             const expectedDalRecord = {
+    //                 test_user_id: expectedSourceId,
+    //                 test_group_id: 'Uptown',
+    //                 currency: 'USD'
+    //             };
+    //             // const mockDalRead = async function (table: string, criteria: OmegaCriteria): Promise<OmegaDalRecord> {
+    //             //     return [{ a: 1 }];
+    //             // };
+    //         });
+    //     });
+    //     describe('When a table link does not exist', () => {
+    //         xtest('It interacts with the DAL as expected', async () => {
+    //             // test
+    //         });
+    //     });
+    // });
+    // describe('And calling deleteTableLink', () => {
+    //     xtest('It interacts with the DAL as expected', async () => {
+    //         // test
+    //     });
+    // });
 });
 
 async function runRetrieveManyTest(
@@ -235,19 +165,13 @@ async function runRetrieveManyTest(
         return expectedDalRecords;
     };
     const mockDal = createOmegaDalMock(testMapPath, undefined, mockDalRead);
-    const createSpy = jest.spyOn(mockDal, 'create');
-    const readSpy = jest.spyOn(mockDal, 'read');
-    const updateSpy = jest.spyOn(mockDal, 'update');
-    const deleteSpy = jest.spyOn(mockDal, 'delete');
+    const spyContainer = createOmegaDalSpies(mockDal);
     const testRepo = new OmegaRepository(mockDal);
     const expectedTableName = testRepo.getTableMap(externalTableName).name;
-    const actualOmegaObjects = await testRepo.retrieveMany(externalTableName, externalCriteria);
-    expect(createSpy).toHaveBeenCalledTimes(0);
-    expect(readSpy).toHaveBeenCalledTimes(1);
     const expectedOmegaCriteria = testRepo.mapExternalCriteriaToDalCriteria(externalTableName, externalCriteria);
-    expect(readSpy).toHaveBeenCalledWith(expectedTableName, expectedOmegaCriteria);
-    expect(updateSpy).toHaveBeenCalledTimes(0);
-    expect(deleteSpy).toHaveBeenCalledTimes(0);
+    const actualOmegaObjects = await testRepo.retrieveMany(externalTableName, externalCriteria);
+    assertDalUsageCounts(spyContainer, 0, 1);
+    expect(spyContainer.spyRead).toHaveBeenCalledWith(expectedTableName, expectedOmegaCriteria);
     if (expectedDalRecords.length > 0) {
         actualOmegaObjects.forEach((actualOmegaObject: OmegaObject, index: number) => {
             const expectedOmegaObject = testRepo.mapRecordToObject(externalTableName, expectedDalRecords[index]);
@@ -272,10 +196,12 @@ async function runRetrieveOneTest(
     const readSpy = jest.spyOn(mockDal, 'read');
     const updateSpy = jest.spyOn(mockDal, 'update');
     const deleteSpy = jest.spyOn(mockDal, 'delete');
+    const spyContainer = createOmegaDalSpies(mockDal);
     const testRepo = new OmegaRepository(mockDal);
     const expectedTableName = testRepo.getTableMap(externalTableName).name;
     const expectedOmegaCriteria = testRepo.createIdentityCriteria(externalTableName, expectedIdentityValue);
     const actualOmegaObject = await testRepo.retrieveOne(externalTableName, expectedIdentityValue);
+    assertDalUsageCounts(spyContainer, 0, 1);
     expect(createSpy).toHaveBeenCalledTimes(0);
     expect(readSpy).toHaveBeenCalledTimes(1);
     expect(readSpy).toHaveBeenCalledWith(expectedTableName, expectedOmegaCriteria);
@@ -338,25 +264,21 @@ async function runPersistTest(objectArray: Array<Partial<OmegaObject>>, returnOb
             return [result];
         };
     }
-
     const mockDal = createOmegaDalMock(testMapPath, mockDalCreate, mockDalRead);
-    const createSpy = jest.spyOn(mockDal, 'create');
-    const readSpy = jest.spyOn(mockDal, 'read');
-    const updateSpy = jest.spyOn(mockDal, 'update');
-    const deleteSpy = jest.spyOn(mockDal, 'delete');
+    const spyContainer = createOmegaDalSpies(mockDal);
     const testRepo = new OmegaRepository(mockDal);
     const actualResults = await testRepo.persist(objectArray, returnObjects);
-
-    expect(createSpy).toHaveBeenCalledTimes(createParam1Array.length);
+    assertDalUsageCounts(spyContainer, createParam1Array.length, readTimes, updateParam1Array.length, 0);
     for (let i = 0; i < createParam1Array.length; i++) {
-        expect(createSpy).toHaveBeenCalledWith(createParam1Array[i], createParam2Array[i]);
+        expect(spyContainer.spyCreate).toHaveBeenCalledWith(createParam1Array[i], createParam2Array[i]);
     }
-    expect(readSpy).toHaveBeenCalledTimes(readTimes);
-    expect(updateSpy).toHaveBeenCalledTimes(updateParam1Array.length);
     for (let i = 0; i < updateParam1Array.length; i++) {
-        expect(updateSpy).toHaveBeenCalledWith(updateParam1Array[i], updateParam2Array[i], updateParam3Array[i]);
+        expect(spyContainer.spyUpdate).toHaveBeenCalledWith(
+            updateParam1Array[i],
+            updateParam2Array[i],
+            updateParam3Array[i]
+        );
     }
-    expect(deleteSpy).toHaveBeenCalledTimes(0);
     if (returnObjects) {
         objectArray.forEach((omegaObject: OmegaObject, index: number) => {
             const tableMap = mockDal.mapper.getTableMap(omegaObject.objectSource);

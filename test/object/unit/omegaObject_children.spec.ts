@@ -1,6 +1,6 @@
 import { createOmegaRepoMock, createOmegaRepoSpies, assertRepoUsageCounts } from './fixtures/omegaRepoMocks';
 import { OmegaObject } from '../../../src/object/omegaObject';
-import { createTestObject } from './fixtures';
+import { createTestObject } from '../../fixtures';
 import { OmegaCriteria } from '../../../src/dal';
 
 describe('When using functions of an IOmegaObject', () => {

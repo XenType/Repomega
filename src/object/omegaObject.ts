@@ -46,13 +46,32 @@ export class OmegaObject {
         const sortedMap = this.getLateralAssociationMap(target);
         return this.retrieveOneToMany(target, sortedMap);
     }
-    public async createLateralLink(target: string, objectId: string | number): Promise<void> {
+    public async createLateralLink(target: string, targetLinkValue: string | number): Promise<void> {
         this.initTableMap();
-        return null;
+        this.verifyLateralAssociation(target);
+        const sortedMap = this.getLateralAssociationMap(target);
+        const linkTable = sortedMap[0].targetTable;
+        const { fields, values } = this.buildFieldValueArrays(sortedMap, targetLinkValue);
+        const criteria = this.buildExtendedCriteria(fields, values);
+        const results = await sourceRepo.retrieveMany(linkTable, criteria);
+        if (results.length === 0) {
+            const newLinkObject = new OmegaObject(sourceRepo);
+            newLinkObject.objectSource = linkTable;
+            newLinkObject.objectData[fields[0]] = values[0];
+            newLinkObject.objectData[fields[1]] = values[1];
+            await sourceRepo.persist([newLinkObject]);
+        }
+        return;
     }
-    public async deleteLateralLink(target: string, objectId: string | number): Promise<void> {
+    public async deleteLateralLink(target: string, targetLinkValue: string | number): Promise<void> {
         this.initTableMap();
-        return null;
+        this.verifyLateralAssociation(target);
+        const sortedMap = this.getLateralAssociationMap(target);
+        const linkTable = sortedMap[0].targetTable;
+        const { fields, values } = this.buildFieldValueArrays(sortedMap, targetLinkValue);
+        const lookupCriteria = this.buildExtendedCriteria(fields, values);
+        await sourceRepo.deleteMany(linkTable, lookupCriteria);
+        return;
     }
     private initTableMap(): void {
         if (!this.tableMap) {
@@ -116,6 +135,14 @@ export class OmegaObject {
         const results = await sourceRepo.retrieveMany(target, criteria);
         return results;
     }
+    private buildFieldValueArrays(sortedMap: OmegaLinkPath[], targetLinkValue: string | number): FieldValueArrays {
+        const sourceLinkField = sortedMap[0].targetId;
+        const sourceLinkValue = this.objectData[sortedMap[0].sourceId];
+        const targetLinkField = sortedMap[1].sourceId;
+        const fields = [sourceLinkField, targetLinkField];
+        const values = [sourceLinkValue, targetLinkValue];
+        return { fields, values };
+    }
     private buildOmegaCriteria(sortedMap: OmegaLinkPath[], reversePath?: boolean): OmegaCriteria {
         let criteria: OmegaCriteria;
         for (const linkPath of sortedMap) {
@@ -148,7 +175,16 @@ export class OmegaObject {
         const linkCriteria = { sourceField, targetTable, targetField, criteria: {} };
         return { _and: [linkCriteria] };
     }
-    private buildStandardCriteria(field: string, value: string | number | Date) {
+    private buildStandardCriteria(field: string, value: string | number | Date): OmegaCriteria {
         return { _and: [{ field, value }] };
     }
+    private buildExtendedCriteria(fields: string[], values: Array<string | number | Date>): OmegaCriteria {
+        const criteria: OmegaCriteria = { _and: [] };
+        fields.forEach((field: string, index: number) => {
+            criteria._and.push({ field, value: values[index] });
+        });
+        return criteria;
+    }
 }
+
+type FieldValueArrays = { fields: string[]; values: Array<string | number | Date> };

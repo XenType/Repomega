@@ -4,6 +4,7 @@ import { OmegaDalRecord, OmegaCriteria, OmegaCriterion, OmegaCriterionLinkTable 
 import { OmegaObject } from '../../../src/object/omegaObject';
 import { createTestObject, createOrCriteria } from '../../fixtures';
 import { cloneDeep } from 'lodash';
+import { OmegaBaseObject } from '../../../src/object';
 
 const testMapPath = 'test/dal/integration/fixtures/integration-map.json';
 
@@ -57,34 +58,38 @@ describe('When using data access functions of an OmegaRepository', () => {
                 market_name: 'Uptown',
                 currency: 'USD'
             };
-            await runRetrieveOneTest(expectedTableName, expectedIdentityValue, expectedDalRecord);
+            const expectedFieldList = ['test_market_id', 'market_name', 'currency'];
+            await runRetrieveOneTest(expectedTableName, expectedIdentityValue, expectedFieldList, expectedDalRecord);
         });
     });
     describe('And calling retrieveOne for an non-existing object', () => {
         test('It interacts with the DAL as expected and returns null', async () => {
             const expectedTableName = 'Market';
             const expectedIdentityValue = 2;
-            await runRetrieveOneTest(expectedTableName, expectedIdentityValue);
+            const expectedFieldList = ['test_market_id', 'market_name', 'currency'];
+            await runRetrieveOneTest(expectedTableName, expectedIdentityValue, expectedFieldList);
         });
     });
     describe('And calling retrieveMany with criteria that yields results', () => {
         test('It interacts with the DAL as expected and returns an array of valid objects', async () => {
             const expectedTableName = 'Market';
             const externalCriteria = createOrCriteria(['currencyType', 'name'], ['USD', 'Also Included']);
+            const expectedFieldList = ['test_market_id', 'market_name', 'currency'];
             const expectedDalRecords = [
                 { test_market_id: 1, market_name: 'Upstate', currency: 'USD' },
                 { test_market_id: 2, market_name: 'Upstate', currency: 'USD' },
                 { test_market_id: 3, market_name: 'Also included', currency: 'GBP' }
             ];
-            await runRetrieveManyTest(expectedTableName, externalCriteria, expectedDalRecords);
+            await runRetrieveManyTest(expectedTableName, externalCriteria, expectedFieldList, expectedDalRecords);
         });
     });
     describe('And calling retrieveMany with criteria that does not yield results', () => {
         test('It interacts with the DAL as expected and returns an array of valid objects', async () => {
             const expectedTableName = 'Market';
             const externalCriteria = createOrCriteria(['currencyType', 'name'], ['USD', 'Also Included']);
+            const expectedFieldList = ['test_market_id', 'market_name', 'currency'];
             const expectedDalRecords = [];
-            await runRetrieveManyTest(expectedTableName, externalCriteria, expectedDalRecords);
+            await runRetrieveManyTest(expectedTableName, externalCriteria, expectedFieldList, expectedDalRecords);
         });
     });
     describe('And calling deleteOne with criteria that matches one record', () => {
@@ -127,38 +132,12 @@ describe('When using data access functions of an OmegaRepository', () => {
             expect(actualResult).toEqual(6);
         });
     });
-    // describe('And calling persistTableLink', () => {
-    //     describe('When a table link already exists', () => {
-    //         xtest('It interacts with the DAL as expected', async () => {
-    //             const externalTargetTable = 'OptionGroup';
-    //             const expectedTargetId = 1;
-    //             const expectedSourceId = 2;
-    //             const expectedDalRecord = {
-    //                 test_user_id: expectedSourceId,
-    //                 test_group_id: 'Uptown',
-    //                 currency: 'USD'
-    //             };
-    //             // const mockDalRead = async function (table: string, criteria: OmegaCriteria): Promise<OmegaDalRecord> {
-    //             //     return [{ a: 1 }];
-    //             // };
-    //         });
-    //     });
-    //     describe('When a table link does not exist', () => {
-    //         xtest('It interacts with the DAL as expected', async () => {
-    //             // test
-    //         });
-    //     });
-    // });
-    // describe('And calling deleteTableLink', () => {
-    //     xtest('It interacts with the DAL as expected', async () => {
-    //         // test
-    //     });
-    // });
 });
 
 async function runRetrieveManyTest(
     externalTableName: string,
     externalCriteria: OmegaCriteria,
+    expectedFieldList: string[],
     expectedDalRecords: OmegaDalRecord[]
 ): Promise<void> {
     const mockDalRead = async function(source: string, criteria: OmegaCriteria): Promise<OmegaDalRecord[]> {
@@ -171,7 +150,7 @@ async function runRetrieveManyTest(
     const expectedOmegaCriteria = testRepo.mapExternalCriteriaToDalCriteria(externalTableName, externalCriteria);
     const actualOmegaObjects = await testRepo.retrieveMany(externalTableName, externalCriteria);
     assertDalUsageCounts(spyContainer, 0, 1);
-    expect(spyContainer.spyRead).toHaveBeenCalledWith(expectedTableName, expectedOmegaCriteria);
+    expect(spyContainer.spyRead).toHaveBeenCalledWith(expectedTableName, expectedOmegaCriteria, expectedFieldList);
     if (expectedDalRecords.length > 0) {
         actualOmegaObjects.forEach((actualOmegaObject: OmegaObject, index: number) => {
             const expectedOmegaObject = testRepo.mapRecordToObject(externalTableName, expectedDalRecords[index]);
@@ -185,6 +164,7 @@ async function runRetrieveManyTest(
 async function runRetrieveOneTest(
     externalTableName: string,
     expectedIdentityValue: string | number,
+    expectedFieldList: string[],
     expectedDalRecord?: OmegaDalRecord
 ): Promise<void> {
     const mockDalReadReturn = expectedDalRecord ? [expectedDalRecord] : [];
@@ -204,7 +184,7 @@ async function runRetrieveOneTest(
     assertDalUsageCounts(spyContainer, 0, 1);
     expect(createSpy).toHaveBeenCalledTimes(0);
     expect(readSpy).toHaveBeenCalledTimes(1);
-    expect(readSpy).toHaveBeenCalledWith(expectedTableName, expectedOmegaCriteria);
+    expect(readSpy).toHaveBeenCalledWith(expectedTableName, expectedOmegaCriteria, expectedFieldList);
     expect(updateSpy).toHaveBeenCalledTimes(0);
     expect(deleteSpy).toHaveBeenCalledTimes(0);
     if (expectedDalRecord) {
@@ -215,7 +195,7 @@ async function runRetrieveOneTest(
     }
 }
 
-async function runPersistTest(objectArray: Array<Partial<OmegaObject>>, returnObjects?: boolean) {
+async function runPersistTest(objectArray: Array<OmegaBaseObject>, returnObjects?: boolean) {
     const preDal = createOmegaDalMock(testMapPath);
     const preRepo = new OmegaRepository(preDal);
     const createParam1Array: string[] = [];

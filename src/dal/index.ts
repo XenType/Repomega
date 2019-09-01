@@ -4,7 +4,7 @@ import { OmegaValue } from '../common/types';
 export interface IOmegaDal {
     mapper: IOmegaMapper;
     create(table: string, newRecord: OmegaDalRecord): Promise<string | number>;
-    read(table: string, criteria: OmegaCriteria): Promise<OmegaDalRecord[]>;
+    read(table: string, criteria: OmegaCriteria, fieldList?: string[]): Promise<OmegaDalRecord[]>;
     update(table: string, updates: Partial<OmegaDalRecord>, criteria: OmegaCriteria): Promise<number>;
     delete(table: string, criteria: OmegaCriteria): Promise<number>;
     closeAll(): Promise<void>;

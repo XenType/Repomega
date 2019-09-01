@@ -35,17 +35,28 @@ export class OmegaRepository implements IOmegaRepository {
     public async retrieveOne(source: string, objectId: string | number): Promise<OmegaObject> {
         const identityCriteria = this.createIdentityCriteria(source, objectId);
         const tableMap = this.getTableMap(source);
-        const dalRecords = await this.omegaDal.read(tableMap.name, identityCriteria);
+        const fieldList = this.createExternalFieldList(tableMap);
+        const dalRecords = await this.omegaDal.read(tableMap.name, identityCriteria, fieldList);
         if (dalRecords && dalRecords.length > 0) {
             const omegaObject = this.mapRecordToObject(source, dalRecords[0]);
             return omegaObject;
         }
         return null;
     }
+    public createExternalFieldList(tableMap: OmegaTableMap): string[] {
+        const fieldList: string[] = [];
+        for (const key of Object.keys(tableMap.fields)) {
+            if (tableMap.fields[key].external) {
+                fieldList.push(tableMap.fields[key].name);
+            }
+        }
+        return fieldList;
+    }
     public async retrieveMany(source: string, criteria: OmegaCriteria): Promise<OmegaObject[]> {
         const internalCriteria = this.mapExternalCriteriaToDalCriteria(source, criteria);
         const tableMap = this.getTableMap(source);
-        const dalRecords = await this.omegaDal.read(tableMap.name, internalCriteria);
+        const fieldList = this.createExternalFieldList(tableMap);
+        const dalRecords = await this.omegaDal.read(tableMap.name, internalCriteria, fieldList);
         if (dalRecords && dalRecords.length > 0) {
             const omegaObjects: OmegaObject[] = [];
             dalRecords.forEach(dalRecord => {

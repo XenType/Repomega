@@ -25,11 +25,18 @@ export class MySqlDal implements IOmegaDal {
         dbConn.release();
         return sqlResult.insertId;
     }
-    public async read(table: string, criteria: OmegaCriteria): Promise<OmegaDalRecord[]> {
+    public async read(table: string, criteria: OmegaCriteria, fieldList?: string[]): Promise<OmegaDalRecord[]> {
         const dbConn = await this.getDbConnection();
         const sqlWhereClause = this.buildCriteriaClause(criteria);
-        const sqlWithTable = SELECT_SQL.replace('{0}', table);
-        const sql = sqlWithTable.replace('{1}', sqlWhereClause);
+        let sql;
+        if (fieldList) {
+            const fieldString = fieldList.join(', ');
+            sql = SELECT_ONLY_SQL.replace('{0}', fieldString)
+                .replace('{1}', table)
+                .replace('{2}', sqlWhereClause);
+        } else {
+            sql = SELECT_SQL.replace('{0}', table).replace('{1}', sqlWhereClause);
+        }
         const sqlResult = await this.getQueryResult(dbConn, sql);
         dbConn.release();
         return sqlResult;

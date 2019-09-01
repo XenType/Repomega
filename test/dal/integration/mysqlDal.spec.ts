@@ -183,6 +183,17 @@ describe('When using a live mysqlDal', () => {
             expect(actualResult.length).toEqual(1);
             expect(actualResult[0]['group_name']).toEqual('Group One');
         });
+        test('When a fieldList is provided, the returned fields are limited to it', async () => {
+            const testCriteria: OmegaCriteria = {
+                _and: [{ field: 'test_group_id', value: 1 }]
+            };
+            const fieldList: string[] = ['test_group_id'];
+            const actualResult = await mysqlDal.read(tableIndex['OptionGroup'], testCriteria, fieldList);
+            expect(actualResult).not.toBeUndefined();
+            expect(actualResult).not.toBeNull();
+            expect(actualResult.length).toEqual(1);
+            expect(actualResult[0]['group_name']).toBeUndefined();
+        });
     });
     describe('And updating a set of records', () => {
         test('BasicTest table accepts a valid command and returns a valid count', async () => {

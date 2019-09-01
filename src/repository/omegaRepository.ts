@@ -1,4 +1,4 @@
-import { IOmegaRepository, ValidationField, FieldTransformFunction } from '.';
+import { IOmegaRepository, OmegaFieldValuePair, FieldTransformFunction } from '.';
 import { OmegaCriteria, IOmegaDal, OmegaDalRecord, OmegaCriterion, OmegaCriterionLinkTable } from '../dal';
 import { IOmegaMapper, OmegaField } from '../mapper';
 import { ErrorSource, ErrorSuffix, throwStandardError, throwFieldValidationError } from '../common';
@@ -32,25 +32,42 @@ export class OmegaRepository implements IOmegaRepository {
         }
         return;
     }
+    public async persistValue(
+        source: string,
+        fieldValuePair: OmegaFieldValuePair,
+        objectId: string | number
+    ): Promise<void> {
+        const identityCriteria = this.createIdentityCriteria(source, objectId);
+        const tableMap = this.getTableMap(source);
+        const mapField = tableMap.fields[fieldValuePair.fieldName];
+        this.validateField(mapField, fieldValuePair, false);
+        const partialUpdate = {
+            [mapField.name]: this.transformToField(mapField, fieldValuePair)
+        };
+        await this.omegaDal.update(tableMap.name, partialUpdate, identityCriteria);
+        return;
+    }
     public async retrieveOne(source: string, objectId: string | number): Promise<OmegaObject> {
         const identityCriteria = this.createIdentityCriteria(source, objectId);
         const tableMap = this.getTableMap(source);
         const fieldList = this.createExternalFieldList(tableMap);
         const dalRecords = await this.omegaDal.read(tableMap.name, identityCriteria, fieldList);
-        if (dalRecords && dalRecords.length > 0) {
+        if (dalRecords && dalRecords.length === 1) {
             const omegaObject = this.mapRecordToObject(source, dalRecords[0]);
             return omegaObject;
         }
         return null;
     }
-    public createExternalFieldList(tableMap: OmegaTableMap): string[] {
-        const fieldList: string[] = [];
-        for (const key of Object.keys(tableMap.fields)) {
-            if (tableMap.fields[key].external) {
-                fieldList.push(tableMap.fields[key].name);
-            }
+    public async retrieveOneValue(source: string, field: string, objectId: string | number): Promise<OmegaValue> {
+        const identityCriteria = this.createIdentityCriteria(source, objectId);
+        const tableMap = this.getTableMap(source);
+        const mapField = tableMap.fields[field];
+        const dalRecords = await this.omegaDal.read(tableMap.name, identityCriteria, [mapField.name]);
+        if (dalRecords && dalRecords.length === 1) {
+            const value = this.transformToProperty(mapField, dalRecords[0][mapField.name]);
+            return value;
         }
-        return fieldList;
+        return null;
     }
     public async retrieveMany(source: string, criteria: OmegaCriteria): Promise<OmegaObject[]> {
         const internalCriteria = this.mapExternalCriteriaToDalCriteria(source, criteria);
@@ -83,20 +100,16 @@ export class OmegaRepository implements IOmegaRepository {
     }
     public addFieldTransformToMap(source: string, field: string, f?: FieldTransformFunction): void {
         if (typeof f === 'function') {
-            console.log(`added ${source}.${field}`);
             this.omegaMapper.addFieldTransform(source, field, f);
         } else {
-            console.log(`removed ${source}.${field}`);
             this.omegaMapper.removeFieldTransform(source, field);
         }
         return;
     }
     public addPropertyTransformToMap(source: string, field: string, f?: FieldTransformFunction): void {
         if (typeof f === 'function') {
-            console.log(`added ${source}.${field}`);
             this.omegaMapper.addPropertyTransform(source, field, f);
         } else {
-            console.log(`removed ${source}.${field}`);
             this.omegaMapper.removeFieldTransform(source, field);
         }
         return;
@@ -108,7 +121,7 @@ export class OmegaRepository implements IOmegaRepository {
         const record = this.initOmegaDalRecord(tableMap, objectData);
         const isNewRecord = this.getRecordIdentityValue(tableMap, record) === undefined;
         Object.keys(tableMap.fields).forEach(key => {
-            const validationField: ValidationField = {
+            const validationField: OmegaFieldValuePair = {
                 fieldName: key,
                 fieldValue: objectData[key]
             };
@@ -122,7 +135,7 @@ export class OmegaRepository implements IOmegaRepository {
     private getRecordIdentityValue(tableMap: OmegaTableMap, record: OmegaDalRecord): any {
         return record[tableMap.fields[tableMap.identity].name];
     }
-    public validateField(mapField: OmegaField, validateField: ValidationField, isNewRecord: boolean): void {
+    public validateField(mapField: OmegaField, validateField: OmegaFieldValuePair, isNewRecord: boolean): void {
         const { fieldName, fieldValue } = validateField;
         if (!mapField.allowNull) {
             if ((isNewRecord && fieldValue === undefined) || fieldValue === null) {
@@ -170,6 +183,15 @@ export class OmegaRepository implements IOmegaRepository {
             throwStandardError('Omega Repository', ErrorSource.REQUESTED_TABLE_MAP, ErrorSuffix.BAD_OMEGA_FORMAT);
         }
     }
+    private createExternalFieldList(tableMap: OmegaTableMap): string[] {
+        const fieldList: string[] = [];
+        for (const key of Object.keys(tableMap.fields)) {
+            if (tableMap.fields[key].external) {
+                fieldList.push(tableMap.fields[key].name);
+            }
+        }
+        return fieldList;
+    }
     public createIdentityCriteria(table: string, objectId: string | number): OmegaCriteria {
         const tableMap = this.omegaMapper.getTableMap(table);
         let field: string;
@@ -208,7 +230,11 @@ export class OmegaRepository implements IOmegaRepository {
     private isMaxLengthSatisfied(fieldValue: OmegaValue, maxLength: number): boolean {
         return !((fieldValue as string).length > maxLength);
     }
-    private validateStringType(mapField: OmegaField, validateField: ValidationField, errors: string[]): void | never {
+    private validateStringType(
+        mapField: OmegaField,
+        validateField: OmegaFieldValuePair,
+        errors: string[]
+    ): void | never {
         const { fieldValue } = validateField;
         if (mapField.validation.minLength !== undefined) {
             if (!this.isMinLengthSatisfied(fieldValue, mapField.validation.minLength)) {
@@ -227,7 +253,11 @@ export class OmegaRepository implements IOmegaRepository {
     private isMaxValueSatisfied(fieldValue: number, maxValue: number): boolean {
         return !(fieldValue > maxValue);
     }
-    private validateNumberType(mapField: OmegaField, validateField: ValidationField, errors: string[]): void | never {
+    private validateNumberType(
+        mapField: OmegaField,
+        validateField: OmegaFieldValuePair,
+        errors: string[]
+    ): void | never {
         const { fieldValue } = validateField;
         if (typeof fieldValue !== 'number') {
             errors.push(ErrorSuffix.NOT_A_NUMBER);
@@ -244,19 +274,27 @@ export class OmegaRepository implements IOmegaRepository {
             }
         }
     }
-    private validateDateTimeType(mapField: OmegaField, validateField: ValidationField, errors: string[]): void | never {
+    private validateDateTimeType(
+        mapField: OmegaField,
+        validateField: OmegaFieldValuePair,
+        errors: string[]
+    ): void | never {
         const { fieldValue } = validateField;
         if (!types.isDate(fieldValue)) {
             errors.push(ErrorSuffix.NOT_A_DATE);
         }
     }
-    private validateEnumType(mapField: OmegaField, validateField: ValidationField, errors: string[]): void | never {
+    private validateEnumType(mapField: OmegaField, validateField: OmegaFieldValuePair, errors: string[]): void | never {
         const { fieldValue } = validateField;
         if (!mapField.validation.enumList.includes(fieldValue as string | number)) {
             errors.push(ErrorSuffix.NOT_IN_LIST);
         }
     }
-    private validatePasswordType(mapField: OmegaField, validateField: ValidationField, errors: string[]): void | never {
+    private validatePasswordType(
+        mapField: OmegaField,
+        validateField: OmegaFieldValuePair,
+        errors: string[]
+    ): void | never {
         const { fieldValue } = validateField;
         this.validateStringType(mapField, validateField, errors);
         if (mapField.validation.requireCharacters) {
@@ -336,24 +374,30 @@ export class OmegaRepository implements IOmegaRepository {
                 return null;
             }
         }
+        return this.transformToProperty(mapField, omegaRecord[mapField.name]);
+    }
+    private transformToProperty(mapField: OmegaField, value: OmegaValue): OmegaValue {
         if (typeof mapField.transformToProperty === 'function') {
-            return mapField.transformToProperty(omegaRecord[mapField.name]);
+            return mapField.transformToProperty(value);
         }
-        return omegaRecord[mapField.name];
+        return value;
     }
     private convertPropertyToField(
         mapField: OmegaField,
-        validationField: ValidationField,
+        field: OmegaFieldValuePair,
         isNewRecord: boolean = false
     ): OmegaValue | undefined {
         if (mapField.external && !mapField.locked) {
-            this.validateField(mapField, validationField, isNewRecord);
-            if (typeof mapField.transformToField === 'function') {
-                return mapField.transformToField(validationField.fieldValue);
-            }
-            return validationField.fieldValue;
+            this.validateField(mapField, field, isNewRecord);
+            return this.transformToField(mapField, field);
         }
         return undefined;
+    }
+    private transformToField(mapField: OmegaField, field: OmegaFieldValuePair): OmegaValue {
+        if (typeof mapField.transformToField === 'function') {
+            return mapField.transformToField(field.fieldValue);
+        }
+        return field.fieldValue;
     }
     private initOmegaDalRecord(tableMap: OmegaTableMap, objectData: OmegaObjectData): OmegaDalRecord {
         const record: OmegaDalRecord = {};

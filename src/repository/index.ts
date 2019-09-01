@@ -5,7 +5,9 @@ import { OmegaValue } from '../common/types';
 
 export interface IOmegaRepository {
     persist: RepositoryPersist;
+    persistValue: RepositoryActSingleValue;
     retrieveOne: RepositoryGetSingle;
+    retrieveOneValue: RepositoryGetSingleValue;
     retrieveMany: RepositoryGetMany;
     deleteOne: RepositoryActSingle;
     deleteMany: RepositoryActMany;
@@ -18,12 +20,21 @@ export type RepositoryPersist = (
     returnObjects?: boolean
 ) => Promise<void | OmegaObject[]>;
 export type RepositoryGetSingle = (source: string, objectId: string | number) => Promise<OmegaObject>;
+export type RepositoryGetSingleValue = (
+    source: string,
+    field: string,
+    objectId: string | number
+) => Promise<OmegaValue>;
 export type RepositoryGetMany = (source: string, criteria: OmegaCriteria) => Promise<OmegaObject[]>;
 export type RepositoryActSingle = (source: string, objectId: string | number) => Promise<number>;
+export type RepositoryActSingleValue = (
+    source: string,
+    field: OmegaFieldValuePair,
+    objectId: string | number
+) => Promise<void>;
 export type RepositoryActMany = (source: string, criteria: OmegaCriteria) => Promise<number>;
-export interface ValidationField {
+export interface OmegaFieldValuePair {
     fieldName: string;
     fieldValue: OmegaValue | undefined;
-    fieldTransform?: FieldTransformFunction;
 }
 export type FieldTransformFunction = (value: OmegaValue) => OmegaValue;

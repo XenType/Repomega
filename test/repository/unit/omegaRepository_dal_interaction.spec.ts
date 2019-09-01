@@ -5,6 +5,7 @@ import { OmegaObject } from '../../../src/object/omegaObject';
 import { createTestObject, createOrCriteria } from '../../fixtures';
 import { cloneDeep } from 'lodash';
 import { OmegaBaseObject } from '../../../src/object';
+import { OmegaFieldValuePair } from '../../../src/repository';
 
 const testMapPath = 'test/dal/integration/fixtures/integration-map.json';
 
@@ -48,7 +49,23 @@ describe('When using data access functions of an OmegaRepository', () => {
             await runPersistTest([testObject1, testObject2, testObject3, testObject4], true);
         });
     });
-
+    describe('And calling persistValue', () => {
+        test('It interacts with the DAL as expected and completes without error when the object record exists', async () => {
+            const mockDalUpdate = async (a: string, b: OmegaDalRecord, c: OmegaCriteria): Promise<number> => {
+                return 1;
+            };
+            const mockDal = createOmegaDalMock(testMapPath, undefined, undefined, mockDalUpdate);
+            const spyContainer = createOmegaDalSpies(mockDal);
+            const testRepo = new OmegaRepository(mockDal);
+            await testRepo.persistValue('Market', { fieldName: 'name', fieldValue: 'New Market' }, 123);
+            assertDalUsageCounts(spyContainer, 0, 0, 1);
+            expect(spyContainer.spyUpdate).toBeCalledWith(
+                'test_market',
+                { market_name: 'New Market' },
+                { _and: [{ field: 'test_market_id', value: 123 }] }
+            );
+        });
+    });
     describe('And calling retrieveOne for an existing object', () => {
         test('It interacts with the DAL as expected and returns a valid object', async () => {
             const expectedTableName = 'Market';
@@ -68,6 +85,31 @@ describe('When using data access functions of an OmegaRepository', () => {
             const expectedIdentityValue = 2;
             const expectedFieldList = ['test_market_id', 'market_name', 'currency'];
             await runRetrieveOneTest(expectedTableName, expectedIdentityValue, expectedFieldList);
+        });
+    });
+    describe('And calling retrieveOneValue for an existing object', () => {
+        test('It interacts with the DAL as expected and returns correct value', async () => {
+            const expectedTableName = 'BasicTests';
+            const expectedFieldName = 'internalTest';
+            const expectedFieldParams = {
+                fieldName: 'test_basic_internal',
+                fieldValue: 11
+            };
+            const expectedDalRecord = {
+                test_basic_internal: 'testing'
+            };
+            await runRetrieveOneValueTest(expectedTableName, expectedFieldName, expectedFieldParams, expectedDalRecord);
+        });
+    });
+    describe('And calling retrieveOneValue for a non-existing object', () => {
+        test('It interacts with the DAL as expected and returns null', async () => {
+            const expectedTableName = 'BasicTests';
+            const expectedFieldName = 'internalTest';
+            const expectedFieldParams = {
+                fieldName: 'test_basic_internal',
+                fieldValue: 11
+            };
+            await runRetrieveOneValueTest(expectedTableName, expectedFieldName, expectedFieldParams);
         });
     });
     describe('And calling retrieveMany with criteria that yields results', () => {
@@ -161,6 +203,40 @@ async function runRetrieveManyTest(
     }
 }
 
+async function runRetrieveOneValueTest(
+    externalTableName: string,
+    expectedFieldName: string,
+    expectedFieldParams: OmegaFieldValuePair,
+    expectedDalRecord?: OmegaDalRecord
+): Promise<void> {
+    const mockDalReadReturn = expectedDalRecord ? [expectedDalRecord] : [];
+    const mockDalRead = async function(source: string, criteria: OmegaCriteria): Promise<OmegaDalRecord[]> {
+        return mockDalReadReturn;
+    };
+    const mockDal = createOmegaDalMock(testMapPath, undefined, mockDalRead);
+    const spyContainer = createOmegaDalSpies(mockDal);
+    const testRepo = new OmegaRepository(mockDal);
+    const expectedTableName = testRepo.getTableMap(externalTableName).name;
+    const expectedOmegaCriteria = testRepo.createIdentityCriteria(
+        externalTableName,
+        expectedFieldParams.fieldValue as number
+    );
+    const actualValue = await testRepo.retrieveOneValue(
+        externalTableName,
+        expectedFieldName,
+        expectedFieldParams.fieldValue as number
+    );
+    assertDalUsageCounts(spyContainer, 0, 1);
+    expect(spyContainer.spyRead).toHaveBeenCalledWith(expectedTableName, expectedOmegaCriteria, [
+        expectedFieldParams.fieldName
+    ]);
+    if (expectedDalRecord) {
+        expect(actualValue).toEqual(expectedDalRecord[expectedFieldParams.fieldName]);
+    } else {
+        expect(actualValue).toBeNull();
+    }
+}
+
 async function runRetrieveOneTest(
     externalTableName: string,
     expectedIdentityValue: string | number,
@@ -172,21 +248,13 @@ async function runRetrieveOneTest(
         return mockDalReadReturn;
     };
     const mockDal = createOmegaDalMock(testMapPath, undefined, mockDalRead);
-    const createSpy = jest.spyOn(mockDal, 'create');
-    const readSpy = jest.spyOn(mockDal, 'read');
-    const updateSpy = jest.spyOn(mockDal, 'update');
-    const deleteSpy = jest.spyOn(mockDal, 'delete');
     const spyContainer = createOmegaDalSpies(mockDal);
     const testRepo = new OmegaRepository(mockDal);
     const expectedTableName = testRepo.getTableMap(externalTableName).name;
     const expectedOmegaCriteria = testRepo.createIdentityCriteria(externalTableName, expectedIdentityValue);
     const actualOmegaObject = await testRepo.retrieveOne(externalTableName, expectedIdentityValue);
     assertDalUsageCounts(spyContainer, 0, 1);
-    expect(createSpy).toHaveBeenCalledTimes(0);
-    expect(readSpy).toHaveBeenCalledTimes(1);
-    expect(readSpy).toHaveBeenCalledWith(expectedTableName, expectedOmegaCriteria, expectedFieldList);
-    expect(updateSpy).toHaveBeenCalledTimes(0);
-    expect(deleteSpy).toHaveBeenCalledTimes(0);
+    expect(spyContainer.spyRead).toHaveBeenCalledWith(expectedTableName, expectedOmegaCriteria, expectedFieldList);
     if (expectedDalRecord) {
         const expectedOmegaObject = testRepo.mapRecordToObject(externalTableName, expectedDalRecord);
         expect(actualOmegaObject).toStrictEqual(expectedOmegaObject);

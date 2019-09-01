@@ -77,6 +77,55 @@ describe('When an omegaRepository with a live omegaDal connection', () => {
             expect(foundMarket).toStrictEqual(retrieveOneMarket);
         });
     });
+    describe('And using the single value methods', () => {
+        let marketId;
+        let basicId;
+        beforeAll(async () => {
+            const newMarket = createNewMarketObject('Northwest', 'USD', testRepo);
+            const insertedItems = await testRepo.persist([newMarket], true);
+            const insertedMarket = insertedItems[0];
+            marketId = insertedMarket.objectData[testRepo.getTableMap('Market').identity];
+            destroyList.push({
+                table: testRepo.getTableMap('Market').name,
+                identityCriteria: testRepo.createIdentityCriteria('Market', marketId)
+            });
+            const newBasicItem = {
+                objectSource: 'BasicTests',
+                objectData: {
+                    stringTest: 'abcd',
+                    numberTest: 5,
+                    dateTest: new Date()
+                }
+            };
+            const insertedBasicItems = await testRepo.persist([newBasicItem], true);
+            basicId = insertedBasicItems[0].objectData[testRepo.getTableMap('BasicTests').identity];
+            destroyList.push({
+                table: testRepo.getTableMap('BasicTests').name,
+                identityCriteria: testRepo.createIdentityCriteria('BasicTests', basicId)
+            });
+        });
+        describe('And calling retrieveOneValue', () => {
+            test('If passed a non-existing Id, null is returned', async () => {
+                const foundMarket = await testRepo.retrieveOneValue('Market', 'name', 0);
+                expect(foundMarket).toBeNull();
+            });
+            test('If passed an existing Id, expected object is returned', async () => {
+                const foundMarket = await testRepo.retrieveOneValue('Market', 'name', marketId);
+                expect(foundMarket).toStrictEqual('Northwest');
+            });
+        });
+        describe('And calling persistValue', () => {
+            test('The update succeeds even if the field is external', async () => {
+                await testRepo.persistValue(
+                    'BasicTests',
+                    { fieldName: 'internalTest', fieldValue: `--${basicId}` },
+                    basicId
+                );
+                const savedValue = await testRepo.retrieveOneValue('BasicTests', 'internalTest', basicId);
+                expect(savedValue).toEqual(`--${basicId}`);
+            });
+        });
+    });
     describe('And using the retrieveMany method', () => {
         const retrieveManyNotFoundCurrency = 'GBP';
         const retrieveManyFoundCurrency = 'YIN';

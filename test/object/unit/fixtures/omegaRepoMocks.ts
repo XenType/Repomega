@@ -5,12 +5,16 @@ import {
     RepositoryActMany,
     RepositoryActSingle,
     IOmegaRepository,
-    FieldTransformFunction
+    FieldTransformFunction,
+    RepositoryGetSingleValue,
+    OmegaFieldValuePair,
+    RepositoryActSingleValue
 } from '../../../../src/repository';
 import { OmegaCriteria } from '../../../../src/dal';
 import { FlatMapper } from '../../../../src/mapper/flatMapper';
-import { OmegaTableMap } from '../../../../src/mapper';
+import { OmegaTableMap, OmegaField } from '../../../../src/mapper';
 import { OmegaObject } from '../../../../src/object/omegaObject';
+import { OmegaValue } from '../../../../src/common/types';
 
 const testMapPath = 'test/dal/integration/fixtures/integration-map.json';
 
@@ -104,7 +108,21 @@ class MockOmegaRepository implements IOmegaRepository {
         }
         return;
     };
+    public persistValue: RepositoryActSingleValue = async (
+        a: string,
+        b: OmegaFieldValuePair,
+        c: string | number
+    ): Promise<void> => {
+        return;
+    };
     public retrieveOne: RepositoryGetSingle = async (a: string, b: string | number): Promise<OmegaObject> => {
+        return null;
+    };
+    public retrieveOneValue: RepositoryGetSingleValue = async (
+        a: string,
+        b: string,
+        c: string | number
+    ): Promise<OmegaValue> => {
         return null;
     };
     public retrieveMany: RepositoryGetMany = async (a: string, b: OmegaCriteria): Promise<OmegaObject[]> => {

@@ -409,6 +409,16 @@
                     "minLength": 1,
                     "maxLength": 50
                 }
+            },
+            "internalTest": {
+                "name": "test_basic_internal",
+                "external": false,
+                "locked": false,
+                "allowNull": true,
+                "validation": {
+                    "type": "string",
+                    "maxLength": 50
+                }
             }
         }
     }

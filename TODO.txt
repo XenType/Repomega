@@ -1,0 +1,21 @@
+NEXT
+OmegaObject.validatePasswordFieldType to .validateInternalField
+- use repo's retrieveOneValue method
+- include transforms (in? & out) in tests
+OmegaObject.modifyInternalFieldType to .saveInternalField
+- use repo's persistValue method
+- include transforms (in & out?) in tests
+
+NEAR
+OmegaObject integration tests
+- primary, secondary and tertiary domain objects
+- parent/child 1/N tests
+- lateral tests
+Refactor large functions
+Refactor tests/fixtures
+Unified error handling in repo or object?
+
+DISTANT
+Find missing test coverage
+NPM publishing
+Config / setup

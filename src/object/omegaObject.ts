@@ -5,10 +5,12 @@ import { throwAssociationError, ErrorSource, ErrorSuffix } from '../common';
 import { OmegaLinkPath } from '../mapper';
 import { OmegaCriteria, OmegaCriterionLinkTable } from '../dal';
 import { cloneDeep } from 'lodash';
-import { start } from 'repl';
+import { OmegaValue } from '../common/types';
+import { OmegaBaseObject } from '.';
+
 let sourceRepo: IOmegaRepository;
 
-export class OmegaObject {
+export class OmegaObject implements OmegaBaseObject {
     public tableMap: OmegaTableMap;
     public objectSource: string;
     public objectData: OmegaObjectData;
@@ -22,10 +24,10 @@ export class OmegaObject {
         this.objectData = savedObjects[0].objectData;
         return;
     }
-    public async validatePassword(mapField: OmegaField, password: string): Promise<boolean> {
+    public async validatePasswordFieldType(field: string, password: string): Promise<boolean> {
         return false;
     }
-    public async modifyInternalField(mapField: OmegaField, value: string): Promise<boolean> {
+    public async modifyInternalFieldType(mapField: OmegaField, value: string): Promise<boolean> {
         return false;
     }
     public async retrieveParentObject(parent: string): Promise<OmegaObject> {
@@ -46,6 +48,7 @@ export class OmegaObject {
         const sortedMap = this.getLateralAssociationMap(target);
         return this.retrieveOneToMany(target, sortedMap);
     }
+    // potentail for refactor in following two functions
     public async createLateralLink(target: string, targetLinkValue: string | number): Promise<void> {
         this.initTableMap();
         this.verifyLateralAssociation(target);
@@ -175,10 +178,10 @@ export class OmegaObject {
         const linkCriteria = { sourceField, targetTable, targetField, criteria: {} };
         return { _and: [linkCriteria] };
     }
-    private buildStandardCriteria(field: string, value: string | number | Date): OmegaCriteria {
+    private buildStandardCriteria(field: string, value: OmegaValue): OmegaCriteria {
         return { _and: [{ field, value }] };
     }
-    private buildExtendedCriteria(fields: string[], values: Array<string | number | Date>): OmegaCriteria {
+    private buildExtendedCriteria(fields: string[], values: Array<OmegaValue>): OmegaCriteria {
         const criteria: OmegaCriteria = { _and: [] };
         fields.forEach((field: string, index: number) => {
             criteria._and.push({ field, value: values[index] });
@@ -187,4 +190,4 @@ export class OmegaObject {
     }
 }
 
-type FieldValueArrays = { fields: string[]; values: Array<string | number | Date> };
+type FieldValueArrays = { fields: string[]; values: Array<OmegaValue> };

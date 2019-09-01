@@ -3,6 +3,7 @@ import { OmegaRepository } from '../../../src/repository/omegaRepository';
 import { OmegaField, OmegaFieldValidation } from '../../../src/mapper';
 import { cloneDeep } from 'lodash';
 import { ValidationField } from '../../../src/repository';
+import { OmegaValue } from '../../../src/common/types';
 
 const testMapPath = 'test/dal/integration/fixtures/integration-map.json';
 const testDal = createOmegaDalMock(testMapPath);
@@ -233,7 +234,7 @@ describe('When calling validateField', () => {
     });
 });
 
-function runValidationTest(testValue: string | number | Date | undefined, validation: OmegaFieldValidation): string {
+function runValidationTest(testValue: OmegaValue | undefined, validation: OmegaFieldValidation): string {
     let message = '';
     const testFieldMap = cloneDeep(baseMapField);
     testFieldMap.validation = validation;

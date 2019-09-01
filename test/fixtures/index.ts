@@ -1,8 +1,9 @@
 import { IOmegaRepository } from '../../src/repository';
 import { OmegaObject } from '../../src/object/omegaObject';
 import { OmegaCriteria, OmegaCriterion } from '../../src/dal';
+import { OmegaValue } from '../../src/common/types';
 type stringOrArray = string | string[];
-type valueOrArray = number | string | Date | Array<number | string | Date>;
+type valueOrArray = OmegaValue | Array<OmegaValue>;
 
 export function createAndCriteria(field: stringOrArray, value: valueOrArray): OmegaCriteria {
     return createCriteria('_and', field, value);
@@ -28,7 +29,7 @@ export function createCriteria(type: string, field: stringOrArray, value: valueO
     }
     return criteria;
 }
-export function createCriterion(field: string, value: number | string | Date): OmegaCriterion {
+export function createCriterion(field: string, value: OmegaValue): OmegaCriterion {
     return { field, value };
 }
 

@@ -2,8 +2,9 @@ import { createOmegaDalMock } from './fixtures/omegaDalMocks';
 import { OmegaRepository } from '../../../src/repository/omegaRepository';
 import { OmegaCriteria, OmegaDalRecord } from '../../../src/dal';
 import { ErrorSource, ErrorSuffix } from '../../../src/common';
-import { OmegaObjectData } from '../../../src/object';
+import { OmegaObjectData, OmegaBaseObject } from '../../../src/object';
 import { OmegaObject } from '../../../src/object/omegaObject';
+import { cloneDeep } from 'lodash';
 
 // This is not the standard integration-map.json because a badly formatted table object is required for testing
 const testMapPath = 'test/repository/unit/fixtures/mapping-function-testMap.json';
@@ -26,7 +27,12 @@ describe('When using mapping functions of an omegaRepository', () => {
             } catch (error) {
                 message = error.message;
             }
-            expect(message).toEqual('Flat Mapper: ' + ErrorSource.REQUESTED_TABLE_MAP + ' ' + ErrorSuffix.NOT_FOUND);
+            expect(message).toEqual(
+                'Flat Mapper: ' +
+                    ErrorSource.REQUESTED_TABLE_MAP +
+                    ' ' +
+                    ErrorSuffix.NOT_FOUND_EXAMPLE.replace('{0}', 'NotThere')
+            );
         });
         test('If mapper schema is not sufficient to create request the expected exception is thrown', () => {
             let message = '';
@@ -176,7 +182,12 @@ describe('When using mapping functions of an omegaRepository', () => {
             } catch (error) {
                 message = error.message;
             }
-            expect(message).toEqual('Flat Mapper: ' + ErrorSource.REQUESTED_TABLE_MAP + ' ' + ErrorSuffix.NOT_FOUND);
+            expect(message).toEqual(
+                'Flat Mapper: ' +
+                    ErrorSource.REQUESTED_TABLE_MAP +
+                    ' ' +
+                    ErrorSuffix.NOT_FOUND_EXAMPLE.replace('{0}', 'NotThere')
+            );
         });
         test('If mapper schema is not sufficient to create request the expected exception is thrown', () => {
             let message = '';
@@ -218,6 +229,37 @@ describe('When using mapping functions of an omegaRepository', () => {
             expectedObject.objectData = expectedObjectData;
             expect(actualObject).toEqual(expectedObject);
         });
+        test('If transform function is present on a field, it is returned in the expected object', () => {
+            const expectedObjectData: OmegaObjectData = {
+                id: 1,
+                firstName: 'Bob',
+                lastName: 'Smith',
+                lastRating: null,
+                createdOn: new Date('12/23/1977'),
+                userType: 'admin',
+                companyId: 1
+            };
+            const inputRecord: OmegaDalRecord = {
+                test_user_id: 1,
+                first_name: 'Bob',
+                last_name: 'Smith',
+                created_at: new Date('12/23/1977'),
+                user_type: 1,
+                test_company_id: 1
+            };
+            function transform(value: number): string {
+                if (value === 1) {
+                    return 'admin';
+                }
+                return 'demo';
+            }
+            testRepo.addPropertyTransformToMap('User', 'userType', transform);
+            const actualObject = testRepo.mapRecordToObject('User', inputRecord);
+            const expectedObject = new OmegaObject(testRepo);
+            expectedObject.objectSource = 'User';
+            expectedObject.objectData = expectedObjectData;
+            expect(actualObject).toEqual(expectedObject);
+        });
         test('If an invalid table name is passed the expected exception is thrown', () => {
             let message = '';
             const inputRecord: OmegaDalRecord = {
@@ -234,7 +276,12 @@ describe('When using mapping functions of an omegaRepository', () => {
             } catch (error) {
                 message = error.message;
             }
-            expect(message).toEqual('Flat Mapper: ' + ErrorSource.REQUESTED_TABLE_MAP + ' ' + ErrorSuffix.NOT_FOUND);
+            expect(message).toEqual(
+                'Flat Mapper: ' +
+                    ErrorSource.REQUESTED_TABLE_MAP +
+                    ' ' +
+                    ErrorSuffix.NOT_FOUND_EXAMPLE.replace('{0}', 'NotThere')
+            );
         });
         test('If a record is missing an allowNull: false field the expected exception is thrown', () => {
             let message = '';
@@ -265,7 +312,7 @@ describe('When using mapping functions of an omegaRepository', () => {
                 test_basic_date: new Date('12/23/1977'),
                 test_basic_null: null
             };
-            const testObject: Partial<OmegaObject> = {
+            const testObject: OmegaBaseObject = {
                 objectSource: 'BasicTests',
                 objectData: {
                     id: 1,
@@ -285,7 +332,7 @@ describe('When using mapping functions of an omegaRepository', () => {
                 test_basic_date: new Date('12/23/1977'),
                 test_basic_null: null
             };
-            const testObject: Partial<OmegaObject> = {
+            const testObject: OmegaBaseObject = {
                 objectSource: 'BasicTests',
                 objectData: {
                     stringTest: 'abcd',
@@ -297,30 +344,57 @@ describe('When using mapping functions of an omegaRepository', () => {
             const actualResult = testRepo.mapObjectToRecord(testObject);
             expect(actualResult).toEqual(expectedResult);
         });
-        test('If a valid partial non-new external object is passed, the expected record is returned', () => {
+        test('If a transformToField property exists on a field, the expected record is returned with transform applied', () => {
+            const tempDal = createOmegaDalMock(testMapPath);
+            const tempRepo = new OmegaRepository(tempDal);
+            function transform(value: number) {
+                return value * 4;
+            }
+            tempRepo.addFieldTransformToMap('BasicTests', 'numberTest', transform);
             const expectedResult: OmegaDalRecord = {
                 test_basic_id: 1,
                 test_basic_string: 'abcd',
                 test_basic_number: 10
             };
-            const testObject: Partial<OmegaObject> = {
+            const testObject: OmegaBaseObject = {
                 objectSource: 'BasicTests',
                 objectData: {
                     id: 1,
                     stringTest: 'abcd',
-                    numberTest: 10
+                    numberTest: 2.5
+                }
+            };
+            const actualResult = tempRepo.mapObjectToRecord(testObject);
+            testRepo.addFieldTransformToMap('BasicTests', 'numberTest');
+            expect(actualResult).toEqual(expectedResult);
+        });
+        test('If a valid new external object is passed, the expected record is returned', () => {
+            const expectedResult: OmegaDalRecord = {
+                test_basic_string: 'abcd',
+                test_basic_number: 10,
+                test_basic_date: new Date('12/23/1977'),
+                test_basic_null: null
+            };
+            const testObject: OmegaBaseObject = {
+                objectSource: 'BasicTests',
+                objectData: {
+                    stringTest: 'abcd',
+                    numberTest: 10,
+                    dateTest: new Date('12/23/1977'),
+                    nullTest: null
                 }
             };
             const actualResult = testRepo.mapObjectToRecord(testObject);
             expect(actualResult).toEqual(expectedResult);
         });
+
         test('If a valid partial new external object is passed, the expected record is returned', () => {
             const expectedResult: OmegaDalRecord = {
                 test_basic_string: 'abcd',
                 test_basic_number: 10,
                 test_basic_date: new Date('12/23/1977')
             };
-            const testObject: Partial<OmegaObject> = {
+            const testObject: OmegaBaseObject = {
                 objectSource: 'BasicTests',
                 objectData: {
                     stringTest: 'abcd',
@@ -332,7 +406,7 @@ describe('When using mapping functions of an omegaRepository', () => {
             expect(actualResult).toEqual(expectedResult);
         });
         test('If an invalid partial new external object is passed, the exected exception is thrown', () => {
-            const testObject: Partial<OmegaObject> = {
+            const testObject: OmegaBaseObject = {
                 objectSource: 'BasicTests',
                 objectData: {
                     stringTest: 'abcd',

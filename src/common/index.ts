@@ -1,6 +1,7 @@
 export enum ErrorSource {
     TABLE_MAP_FILE = 'Table map file',
     REQUESTED_TABLE_MAP = 'Requested table map',
+    REQUESTED_TABLE_MAP_FIELD = 'Requested table map field',
     OMEGA_DAL_RECORD = 'Omega Dal Record',
     OMEGA_NEW_OBJECT = 'New Omega Object',
     VALIDATION_ERROR = '{0} ({1} field)',

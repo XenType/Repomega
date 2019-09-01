@@ -1,4 +1,5 @@
 import { IOmegaMapper } from '../mapper';
+import { OmegaValue } from '../common/types';
 
 export interface IOmegaDal {
     mapper: IOmegaMapper;
@@ -10,7 +11,7 @@ export interface IOmegaDal {
 }
 
 export interface OmegaDalRecord {
-    [key: string]: string | number | Date;
+    [key: string]: OmegaValue;
 }
 export interface OmegaCriteria {
     _and?: Array<OmegaCriterion | OmegaCriteria | OmegaCriterionLinkTable>;

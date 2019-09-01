@@ -58,7 +58,7 @@ describe('When using FlatMapper', () => {
             const mapper = new FlatMapper(invalidFilePath);
             let message = '';
             try {
-                const tableIndex = mapper.getTableIndex();
+                mapper.getTableIndex();
             } catch (error) {
                 message = error.message;
             }
@@ -75,15 +75,233 @@ describe('When using FlatMapper', () => {
         });
         test('It throws expected error when requested table is not found', () => {
             let message = '';
-            const expectedTableMap = tableMapFixture.Market;
             const goodFilePath = 'test/mapper/unit/fixtures/flat-table-map-fixture.json';
             const mapper = new FlatMapper(goodFilePath);
             try {
-                const tableMap = mapper.getTableMap('notfound');
+                mapper.getTableMap('notfound');
             } catch (error) {
                 message = error.message;
             }
-            expect(message).toEqual('Flat Mapper: ' + ErrorSource.REQUESTED_TABLE_MAP + ' ' + ErrorSuffix.NOT_FOUND);
+            expect(message).toEqual(
+                'Flat Mapper: ' +
+                    ErrorSource.REQUESTED_TABLE_MAP +
+                    ' ' +
+                    ErrorSuffix.NOT_FOUND_EXAMPLE.replace('{0}', 'notfound')
+            );
+        });
+    });
+    describe('And calling addFieldTransform', () => {
+        test('It throws expected error when requested table is not found', () => {
+            let message = '';
+            const goodFilePath = 'test/mapper/unit/fixtures/flat-table-map-fixture.json';
+            const mapper = new FlatMapper(goodFilePath);
+            try {
+                mapper.addFieldTransform('notfound', 'notfoundfield', function(a) {
+                    return a;
+                });
+            } catch (error) {
+                message = error.message;
+            }
+            expect(message).toEqual(
+                'Flat Mapper: ' +
+                    ErrorSource.REQUESTED_TABLE_MAP +
+                    ' ' +
+                    ErrorSuffix.NOT_FOUND_EXAMPLE.replace('{0}', 'notfound')
+            );
+        });
+        test('It throws expected error when requested field is not found', () => {
+            let message = '';
+            const goodFilePath = 'test/mapper/unit/fixtures/flat-table-map-fixture.json';
+            const mapper = new FlatMapper(goodFilePath);
+            try {
+                mapper.addFieldTransform('Market', 'notfoundfield', function(a) {
+                    return a;
+                });
+            } catch (error) {
+                message = error.message;
+            }
+            expect(message).toEqual(
+                'Flat Mapper: ' +
+                    ErrorSource.REQUESTED_TABLE_MAP_FIELD +
+                    ' ' +
+                    ErrorSuffix.NOT_FOUND_EXAMPLE.replace('{0}', 'notfoundfield')
+            );
+        });
+        test('It adds the function as the transform property of the tables field', () => {
+            let message = '';
+            const goodFilePath = 'test/mapper/unit/fixtures/flat-table-map-fixture.json';
+            const mapper = new FlatMapper(goodFilePath);
+            const transform = a => {
+                return `--${a}--`;
+            };
+            mapper.addFieldTransform('User', 'password', transform);
+            const tableMap = mapper.getTableMap('User');
+            expect(tableMap.fields['password'].transformToField).toStrictEqual(transform);
+        });
+        test('The provided function returns the expected result after being added', () => {
+            let message = '';
+            const goodFilePath = 'test/mapper/unit/fixtures/flat-table-map-fixture.json';
+            const mapper = new FlatMapper(goodFilePath);
+            const transform = a => {
+                return `--${a}--`;
+            };
+            mapper.addFieldTransform('User', 'password', transform);
+            const tableMap = mapper.getTableMap('User');
+            const value = tableMap.fields['password'].transformToField('word');
+            expect(value).toEqual(`--word--`);
+        });
+    });
+    describe('And calling addPropertyTransform', () => {
+        test('It throws expected error when requested table is not found', () => {
+            let message = '';
+            const goodFilePath = 'test/mapper/unit/fixtures/flat-table-map-fixture.json';
+            const mapper = new FlatMapper(goodFilePath);
+            try {
+                mapper.addPropertyTransform('notfound', 'notfoundfield', function(a) {
+                    return a;
+                });
+            } catch (error) {
+                message = error.message;
+            }
+            expect(message).toEqual(
+                'Flat Mapper: ' +
+                    ErrorSource.REQUESTED_TABLE_MAP +
+                    ' ' +
+                    ErrorSuffix.NOT_FOUND_EXAMPLE.replace('{0}', 'notfound')
+            );
+        });
+        test('It throws expected error when requested field is not found', () => {
+            let message = '';
+            const goodFilePath = 'test/mapper/unit/fixtures/flat-table-map-fixture.json';
+            const mapper = new FlatMapper(goodFilePath);
+            try {
+                mapper.addPropertyTransform('Market', 'notfoundfield', function(a) {
+                    return a;
+                });
+            } catch (error) {
+                message = error.message;
+            }
+            expect(message).toEqual(
+                'Flat Mapper: ' +
+                    ErrorSource.REQUESTED_TABLE_MAP_FIELD +
+                    ' ' +
+                    ErrorSuffix.NOT_FOUND_EXAMPLE.replace('{0}', 'notfoundfield')
+            );
+        });
+        test('It adds the function as the transform property of the tables field', () => {
+            let message = '';
+            const goodFilePath = 'test/mapper/unit/fixtures/flat-table-map-fixture.json';
+            const mapper = new FlatMapper(goodFilePath);
+            const transform = a => {
+                return `--${a}--`;
+            };
+            mapper.addPropertyTransform('User', 'password', transform);
+            const tableMap = mapper.getTableMap('User');
+            expect(tableMap.fields['password'].transformToProperty).toStrictEqual(transform);
+        });
+        test('The provided function returns the expected result after being added', () => {
+            let message = '';
+            const goodFilePath = 'test/mapper/unit/fixtures/flat-table-map-fixture.json';
+            const mapper = new FlatMapper(goodFilePath);
+            const transform = a => {
+                return `--${a}--`;
+            };
+            mapper.addPropertyTransform('User', 'password', transform);
+            const tableMap = mapper.getTableMap('User');
+            const value = tableMap.fields['password'].transformToProperty('word');
+            expect(value).toEqual(`--word--`);
+        });
+    });
+    describe('And calling removeFieldTransform', () => {
+        test('It throws expected error when requested table is not found', () => {
+            let message = '';
+            const goodFilePath = 'test/mapper/unit/fixtures/flat-table-map-fixture.json';
+            const mapper = new FlatMapper(goodFilePath);
+            try {
+                mapper.removeFieldTransform('notfound', 'notfoundfield');
+            } catch (error) {
+                message = error.message;
+            }
+            expect(message).toEqual(
+                'Flat Mapper: ' +
+                    ErrorSource.REQUESTED_TABLE_MAP +
+                    ' ' +
+                    ErrorSuffix.NOT_FOUND_EXAMPLE.replace('{0}', 'notfound')
+            );
+        });
+        test('It throws expected error when requested field is not found', () => {
+            let message = '';
+            const goodFilePath = 'test/mapper/unit/fixtures/flat-table-map-fixture.json';
+            const mapper = new FlatMapper(goodFilePath);
+            try {
+                mapper.removeFieldTransform('Market', 'notfoundfield');
+            } catch (error) {
+                message = error.message;
+            }
+            expect(message).toEqual(
+                'Flat Mapper: ' +
+                    ErrorSource.REQUESTED_TABLE_MAP_FIELD +
+                    ' ' +
+                    ErrorSuffix.NOT_FOUND_EXAMPLE.replace('{0}', 'notfoundfield')
+            );
+        });
+        test('It removes the function from the transform property of the tables field', () => {
+            let message = '';
+            const goodFilePath = 'test/mapper/unit/fixtures/flat-table-map-fixture.json';
+            const mapper = new FlatMapper(goodFilePath);
+            const transform = a => {
+                return `--${a}--`;
+            };
+            mapper.addFieldTransform('User', 'password', transform);
+            mapper.removeFieldTransform('User', 'password');
+            const tableMap = mapper.getTableMap('User');
+            expect(tableMap.fields['password'].transformToField).toBeUndefined();
+        });
+    });
+    describe('And calling removePropertyTransform', () => {
+        test('It throws expected error when requested table is not found', () => {
+            let message = '';
+            const goodFilePath = 'test/mapper/unit/fixtures/flat-table-map-fixture.json';
+            const mapper = new FlatMapper(goodFilePath);
+            try {
+                mapper.removePropertyTransform('notfound', 'notfoundfield');
+            } catch (error) {
+                message = error.message;
+            }
+            expect(message).toEqual(
+                'Flat Mapper: ' +
+                    ErrorSource.REQUESTED_TABLE_MAP +
+                    ' ' +
+                    ErrorSuffix.NOT_FOUND_EXAMPLE.replace('{0}', 'notfound')
+            );
+        });
+        test('It throws expected error when requested field is not found', () => {
+            let message = '';
+            const goodFilePath = 'test/mapper/unit/fixtures/flat-table-map-fixture.json';
+            const mapper = new FlatMapper(goodFilePath);
+            try {
+                mapper.removePropertyTransform('Market', 'notfoundfield');
+            } catch (error) {
+                message = error.message;
+            }
+            expect(message).toEqual(
+                'Flat Mapper: ' +
+                    ErrorSource.REQUESTED_TABLE_MAP_FIELD +
+                    ' ' +
+                    ErrorSuffix.NOT_FOUND_EXAMPLE.replace('{0}', 'notfoundfield')
+            );
+        });
+        test('It removes the function as the transform property of the tables field', () => {
+            let message = '';
+            const goodFilePath = 'test/mapper/unit/fixtures/flat-table-map-fixture.json';
+            const mapper = new FlatMapper(goodFilePath);
+            const transform = a => {
+                return `--${a}--`;
+            };
+            mapper.addPropertyTransform('User', 'password', transform);
+            mapper.removePropertyTransform('User', 'password');
+            const tableMap = mapper.getTableMap('User');
+            expect(tableMap.fields['password'].transformToProperty).toBeUndefined();
         });
     });
 });

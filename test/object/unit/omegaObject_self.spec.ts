@@ -28,11 +28,11 @@ describe('When using functions of an IOmegaObject', () => {
             expect(testObject.objectData.id).toEqual(1);
         });
     });
-    // describe('And calling validatePassword', () => {
-    //     test('...', async () => {
-    //         // test
-    //     });
-    // });
+    describe('And calling validatePassword', () => {
+        xtest('...', async () => {
+            // test
+        });
+    });
     // describe('And calling modifyInternalField', () => {
     //     test('...', async () => {
     //         // test

@@ -1,1 +1,1 @@
-export type OmegaValue = string | number | Date; // Add boolean
+export type OmegaValue = string | number | Date | boolean;

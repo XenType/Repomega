@@ -37,4 +37,4 @@ export interface OmegaFieldValuePair {
     fieldName: string;
     fieldValue: OmegaValue | undefined;
 }
-export type FieldTransformFunction = (value: OmegaValue) => OmegaValue;
+export type FieldTransformFunction = (value: OmegaValue, savedValue?: OmegaValue) => Promise<OmegaValue>;

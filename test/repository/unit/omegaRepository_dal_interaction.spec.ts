@@ -189,15 +189,16 @@ async function runRetrieveManyTest(
     const spyContainer = createOmegaDalSpies(mockDal);
     const testRepo = new OmegaRepository(mockDal);
     const expectedTableName = testRepo.getTableMap(externalTableName).name;
-    const expectedOmegaCriteria = testRepo.mapExternalCriteriaToDalCriteria(externalTableName, externalCriteria);
+    const expectedOmegaCriteria = await testRepo.mapExternalCriteriaToDalCriteria(externalTableName, externalCriteria);
     const actualOmegaObjects = await testRepo.retrieveMany(externalTableName, externalCriteria);
     assertDalUsageCounts(spyContainer, 0, 1);
     expect(spyContainer.spyRead).toHaveBeenCalledWith(expectedTableName, expectedOmegaCriteria, expectedFieldList);
     if (expectedDalRecords.length > 0) {
-        actualOmegaObjects.forEach((actualOmegaObject: OmegaObject, index: number) => {
-            const expectedOmegaObject = testRepo.mapRecordToObject(externalTableName, expectedDalRecords[index]);
+        // actualOmegaObjects.forEach((actualOmegaObject: OmegaObject, index: number) => {
+        for (const [index, actualOmegaObject] of actualOmegaObjects.entries()) {
+            const expectedOmegaObject = await testRepo.mapRecordToObject(externalTableName, expectedDalRecords[index]);
             expect(actualOmegaObject).toStrictEqual(expectedOmegaObject);
-        });
+        }
     } else {
         expect(actualOmegaObjects).toStrictEqual([]);
     }
@@ -256,7 +257,7 @@ async function runRetrieveOneTest(
     assertDalUsageCounts(spyContainer, 0, 1);
     expect(spyContainer.spyRead).toHaveBeenCalledWith(expectedTableName, expectedOmegaCriteria, expectedFieldList);
     if (expectedDalRecord) {
-        const expectedOmegaObject = testRepo.mapRecordToObject(externalTableName, expectedDalRecord);
+        const expectedOmegaObject = await testRepo.mapRecordToObject(externalTableName, expectedDalRecord);
         expect(actualOmegaObject).toStrictEqual(expectedOmegaObject);
     } else {
         expect(actualOmegaObject).toBeNull();
@@ -274,25 +275,25 @@ async function runPersistTest(objectArray: Array<OmegaBaseObject>, returnObjects
     let newIdentityStart = 100;
     const affectedRecordArray: OmegaDalRecord[] = [];
     const newRecordIdentities: Array<string | number> = [];
-    objectArray.forEach(testObject => {
+    for (const testObject of objectArray) {
         const tableMap = preDal.mapper.getTableMap(testObject.objectSource);
         const identityValue = testObject.objectData[tableMap.identity] as string | number;
         if (identityValue !== undefined) {
             updateParam1Array.push(tableMap.name);
-            const affectedRecord = preRepo.mapObjectToRecord(testObject);
+            const affectedRecord = await preRepo.mapObjectToRecord(testObject);
             updateParam2Array.push(affectedRecord);
             affectedRecordArray.push(affectedRecord);
             updateParam3Array.push(preRepo.createIdentityCriteria(testObject.objectSource, identityValue));
         } else {
             createParam1Array.push(tableMap.name);
-            const affectedRecord = preRepo.mapObjectToRecord(testObject);
+            const affectedRecord = await preRepo.mapObjectToRecord(testObject);
             createParam2Array.push(cloneDeep(affectedRecord));
             newIdentityStart++;
             newRecordIdentities.push(newIdentityStart);
             affectedRecord[tableMap.fields[tableMap.identity].name] = newIdentityStart;
             affectedRecordArray.push(affectedRecord);
         }
-    });
+    }
     const readTimes = returnObjects ? affectedRecordArray.length : 0;
     let mockDalCreate = undefined;
     let mockDalRead = undefined;

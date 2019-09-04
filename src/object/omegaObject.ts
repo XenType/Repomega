@@ -1,7 +1,7 @@
 import { OmegaObjectData } from '.';
 import { IOmegaRepository } from '../repository';
 import { OmegaTableMap, OmegaField } from '../mapper';
-import { throwAssociationError, ErrorSource, ErrorSuffix } from '../common';
+import { throwAssociationError, ErrorSource, ErrorSuffix, throwStandardError } from '../common';
 import { OmegaLinkPath } from '../mapper';
 import { OmegaCriteria, OmegaCriterionLinkTable } from '../dal';
 import { cloneDeep } from 'lodash';
@@ -9,6 +9,7 @@ import { OmegaValue } from '../common/types';
 import { OmegaBaseObject } from '.';
 
 let sourceRepo: IOmegaRepository;
+const extClassName = 'OmegaObject';
 
 export class OmegaObject implements OmegaBaseObject {
     public tableMap: OmegaTableMap;
@@ -24,10 +25,54 @@ export class OmegaObject implements OmegaBaseObject {
         this.objectData = savedObjects[0].objectData;
         return;
     }
-    public async validatePasswordFieldType(field: string, password: string): Promise<boolean> {
-        return false;
+    public async verifyInternalField(field: string, value: OmegaValue): Promise<boolean> {
+        this.initTableMap();
+        const isPassword = this.isPasswordField(field);
+        const savedValue = await sourceRepo.retrieveOneValue(this.objectSource, field, this.objectData[
+            this.tableMap.identity
+        ] as string | number);
+        if (isPassword) {
+            return this.verifyPasswordField(field, value, savedValue);
+        } else {
+            return this.verifyStandardExternalField(field, value, savedValue);
+            // const finalValue = await this.transformSavedValueForVerification(field, savedValue);
+            // const passedValue = await this.transformPassedValueForVerification(field, value);
+            // return finalValue === passedValue;
+        }
     }
-    public async modifyInternalFieldType(mapField: OmegaField, value: string): Promise<boolean> {
+    private async verifyPasswordField(field: string, value: OmegaValue, savedValue: OmegaValue): Promise<boolean> {
+        if (typeof this.tableMap.fields[field].transformToProperty === 'function') {
+            return (await this.tableMap.fields[field].transformToProperty(value, savedValue)) as boolean;
+        } else {
+            const passedValue = await this.transformPassedValueForVerification(field, value);
+            return passedValue === savedValue;
+        }
+    }
+    private async verifyStandardExternalField(
+        field: string,
+        value: OmegaValue,
+        savedValue: OmegaValue
+    ): Promise<boolean> {
+        const finalValue = await this.transformSavedValueForVerification(field, savedValue);
+        const passedValue = await this.transformPassedValueForVerification(field, value);
+        return finalValue === passedValue;
+    }
+    private async transformSavedValueForVerification(field: string, value: OmegaValue): Promise<OmegaValue> {
+        if (typeof this.tableMap.fields[field].transformToProperty === 'function') {
+            return await this.tableMap.fields[field].transformToProperty(value);
+        }
+        return value;
+    }
+    private async transformPassedValueForVerification(field: string, value: OmegaValue): Promise<OmegaValue> {
+        if (
+            typeof this.tableMap.fields[field].transformToProperty !== 'function' &&
+            typeof this.tableMap.fields[field].transformToField === 'function'
+        ) {
+            return await this.tableMap.fields[field].transformToField(value);
+        }
+        return value;
+    }
+    public async saveInternalField(mapField: OmegaField, value: string): Promise<boolean> {
         return false;
     }
     public async retrieveParentObject(parent: string): Promise<OmegaObject> {
@@ -104,6 +149,26 @@ export class OmegaObject implements OmegaBaseObject {
             );
         }
         return;
+    }
+    private isPasswordField(field: string): boolean | never {
+        const mapField = this.tableMap.fields[field];
+        if (!mapField) {
+            throwStandardError(
+                extClassName,
+                ErrorSource.REQUESTED_TABLE_MAP_FIELD,
+                ErrorSuffix.NOT_FOUND_EXAMPLE,
+                field
+            );
+        }
+        if (mapField.external) {
+            throwStandardError(
+                extClassName,
+                ErrorSource.REQUESTED_TABLE_MAP_FIELD,
+                ErrorSuffix.NOT_INTERNAL_EXAMPLE,
+                field
+            );
+        }
+        return mapField.validation.type === 'password';
     }
     private getLateralAssociationMap(target: string): OmegaLinkPath[] {
         const associationMap = this.tableMap.lateralAssociations[target];

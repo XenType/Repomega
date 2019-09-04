@@ -419,6 +419,31 @@
                     "type": "string",
                     "maxLength": 50
                 }
+            },
+            "lockedTest": {
+                "name": "test_basic_locked",
+                "external": false,
+                "locked": true,
+                "allowNull": true,
+                "validation": {
+                    "type": "string",
+                    "maxLength": 50
+                }
+            },
+            "passwordTest": {
+                "name": "test_basic_password",
+                "external": false,
+                "locked": false,
+                "allowNull": true,
+                "validation": {
+                    "type": "password",
+                    "minLength": 6,
+                    "maxLength": 50,
+                    "requiredCharacters": {
+                        "lowerCase": true,
+                        "number": true
+                    }
+                }
             }
         }
     }

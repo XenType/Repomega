@@ -24,18 +24,38 @@ export function assertRepoUsageCounts(
     retrieveOne?: number,
     retrieveMany?: number,
     deleteOne?: number,
-    deleteMany?: number
+    deleteMany?: number,
+    persistValue?: number,
+    retrieveOneValue?: number
 ): void {
-    const { spyPersist, spyRetrieveOne, spyRetrieveMany, spyDeleteOne, spyDeleteMany } = spyContainer;
+    const {
+        spyPersist,
+        spyRetrieveOne,
+        spyRetrieveMany,
+        spyDeleteOne,
+        spyDeleteMany,
+        spyPersistValue,
+        spyRetrieveOneValue
+    } = spyContainer;
     if (persist) {
         expect(spyPersist).toHaveBeenCalledTimes(persist);
     } else {
         expect(spyPersist).toHaveBeenCalledTimes(0);
     }
+    if (persistValue) {
+        expect(spyPersistValue).toHaveBeenCalledTimes(persistValue);
+    } else {
+        expect(spyPersistValue).toHaveBeenCalledTimes(0);
+    }
     if (retrieveOne) {
         expect(spyRetrieveOne).toHaveBeenCalledTimes(retrieveOne);
     } else {
         expect(spyRetrieveOne).toHaveBeenCalledTimes(0);
+    }
+    if (retrieveOneValue) {
+        expect(spyRetrieveOneValue).toHaveBeenCalledTimes(retrieveOneValue);
+    } else {
+        expect(spyRetrieveOneValue).toHaveBeenCalledTimes(0);
     }
     if (retrieveMany) {
         expect(spyRetrieveMany).toHaveBeenCalledTimes(retrieveMany);
@@ -60,7 +80,18 @@ export function createOmegaRepoSpies(mockRepo: IOmegaRepository): RepoSpies {
     const spyRetrieveMany = jest.spyOn(mockRepo, 'retrieveMany');
     const spyDeleteOne = jest.spyOn(mockRepo, 'deleteOne');
     const spyDeleteMany = jest.spyOn(mockRepo, 'deleteMany');
-    return { spyPersist, spyRetrieveOne, spyRetrieveMany, spyDeleteOne, spyDeleteMany }; // , spyPersistLink, spyDeleteLink };
+    const spyPersistValue = jest.spyOn(mockRepo, 'persistValue');
+    const spyRetrieveOneValue = jest.spyOn(mockRepo, 'retrieveOneValue');
+
+    return {
+        spyPersist,
+        spyRetrieveOne,
+        spyRetrieveMany,
+        spyDeleteOne,
+        spyDeleteMany,
+        spyPersistValue,
+        spyRetrieveOneValue
+    };
 }
 
 export type RepoSpies = {
@@ -69,6 +100,8 @@ export type RepoSpies = {
     spyRetrieveMany: any;
     spyDeleteOne: any;
     spyDeleteMany: any;
+    spyPersistValue: any;
+    spyRetrieveOneValue: any;
 };
 
 export function createOmegaRepoMock(
@@ -76,15 +109,23 @@ export function createOmegaRepoMock(
     _retrieveOne?: RepositoryGetSingle,
     _retrieveMany?: RepositoryGetMany,
     _deleteOne?: RepositoryActSingle,
-    _deleteMany?: RepositoryActMany
+    _deleteMany?: RepositoryActMany,
+    _persistValue?: RepositoryActSingleValue,
+    _retrieveOneValue?: RepositoryGetSingleValue
 ): IOmegaRepository {
     const tableMapper = new FlatMapper(testMapPath);
     const mockOmegaRepository = new MockOmegaRepository(tableMapper);
     if (_persist) {
         mockOmegaRepository.persist = _persist;
     }
+    if (_persistValue) {
+        mockOmegaRepository.persistValue = _persistValue;
+    }
     if (_retrieveOne) {
         mockOmegaRepository.retrieveOne = _retrieveOne;
+    }
+    if (_retrieveOneValue) {
+        mockOmegaRepository.retrieveOneValue = _retrieveOneValue;
     }
     if (_retrieveMany) {
         mockOmegaRepository.retrieveMany = _retrieveMany;
@@ -95,6 +136,7 @@ export function createOmegaRepoMock(
     if (_deleteMany) {
         mockOmegaRepository.deleteMany = _deleteMany;
     }
+
     return mockOmegaRepository;
 }
 class MockOmegaRepository implements IOmegaRepository {
@@ -135,7 +177,7 @@ class MockOmegaRepository implements IOmegaRepository {
         return 0;
     };
     public addFieldTransformToMap(source: string, field: string, f?: FieldTransformFunction) {
-        if (!f === undefined) {
+        if (typeof f === 'function') {
             this.tableMapper.addFieldTransform(source, field, f);
         } else {
             this.tableMapper.removeFieldTransform(source, field);
@@ -143,7 +185,7 @@ class MockOmegaRepository implements IOmegaRepository {
         return;
     }
     public addPropertyTransformToMap(source: string, field: string, f?: FieldTransformFunction) {
-        if (!f === undefined) {
+        if (typeof f === 'function') {
             this.tableMapper.addPropertyTransform(source, field, f);
         } else {
             this.tableMapper.removeFieldTransform(source, field);

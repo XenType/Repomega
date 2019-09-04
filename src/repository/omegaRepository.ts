@@ -42,7 +42,7 @@ export class OmegaRepository implements IOmegaRepository {
         const mapField = tableMap.fields[fieldValuePair.fieldName];
         this.validateField(mapField, fieldValuePair, false);
         const partialUpdate = {
-            [mapField.name]: this.transformToField(mapField, fieldValuePair)
+            [mapField.name]: await this.transformToField(mapField, fieldValuePair)
         };
         await this.omegaDal.update(tableMap.name, partialUpdate, identityCriteria);
         return;
@@ -53,7 +53,7 @@ export class OmegaRepository implements IOmegaRepository {
         const fieldList = this.createExternalFieldList(tableMap);
         const dalRecords = await this.omegaDal.read(tableMap.name, identityCriteria, fieldList);
         if (dalRecords && dalRecords.length === 1) {
-            const omegaObject = this.mapRecordToObject(source, dalRecords[0]);
+            const omegaObject = await this.mapRecordToObject(source, dalRecords[0]);
             return omegaObject;
         }
         return null;
@@ -64,7 +64,7 @@ export class OmegaRepository implements IOmegaRepository {
         const mapField = tableMap.fields[field];
         const dalRecords = await this.omegaDal.read(tableMap.name, identityCriteria, [mapField.name]);
         if (dalRecords && dalRecords.length === 1) {
-            const value = this.transformToProperty(mapField, dalRecords[0][mapField.name]);
+            const value = await this.transformToProperty(mapField, dalRecords[0][mapField.name]);
             return value;
         }
         return null;
@@ -76,9 +76,9 @@ export class OmegaRepository implements IOmegaRepository {
         const dalRecords = await this.omegaDal.read(tableMap.name, internalCriteria, fieldList);
         if (dalRecords && dalRecords.length > 0) {
             const omegaObjects: OmegaObject[] = [];
-            dalRecords.forEach(dalRecord => {
-                omegaObjects.push(this.mapRecordToObject(source, dalRecord));
-            });
+            for (const dalRecord of dalRecords) {
+                omegaObjects.push(await this.mapRecordToObject(source, dalRecord));
+            }
             return omegaObjects;
         }
         return [];
@@ -115,21 +115,21 @@ export class OmegaRepository implements IOmegaRepository {
         return;
     }
     // public for testing
-    public mapObjectToRecord(externalObject: OmegaBaseObject): OmegaDalRecord {
+    public async mapObjectToRecord(externalObject: OmegaBaseObject): Promise<OmegaDalRecord> {
         const tableMap = this.omegaMapper.getTableMap(externalObject.objectSource);
         const objectData = externalObject.objectData;
         const record = this.initOmegaDalRecord(tableMap, objectData);
         const isNewRecord = this.getRecordIdentityValue(tableMap, record) === undefined;
-        Object.keys(tableMap.fields).forEach(key => {
+        for (const key of Object.keys(tableMap.fields)) {
             const validationField: OmegaFieldValuePair = {
                 fieldName: key,
                 fieldValue: objectData[key]
             };
-            const fieldValue = this.convertPropertyToField(tableMap.fields[key], validationField, isNewRecord);
+            const fieldValue = await this.convertPropertyToField(tableMap.fields[key], validationField, isNewRecord);
             if (fieldValue !== undefined) {
                 record[tableMap.fields[key].name] = fieldValue;
             }
-        });
+        }
         return record;
     }
     private getRecordIdentityValue(tableMap: OmegaTableMap, record: OmegaDalRecord): any {
@@ -164,15 +164,15 @@ export class OmegaRepository implements IOmegaRepository {
             }
         }
     }
-    public mapRecordToObject(table: string, omegaRecord: OmegaDalRecord): OmegaObject {
+    public async mapRecordToObject(table: string, omegaRecord: OmegaDalRecord): Promise<OmegaObject> {
         const tableMap = this.omegaMapper.getTableMap(table);
         const newObject = new OmegaObject(this);
         newObject.objectSource = table;
-        Object.keys(tableMap.fields).forEach(key => {
+        for (const key of Object.keys(tableMap.fields)) {
             if (tableMap.fields[key].external) {
-                newObject.objectData[key] = this.convertFieldToProperty(tableMap.fields[key], omegaRecord);
+                newObject.objectData[key] = await this.convertFieldToProperty(tableMap.fields[key], omegaRecord);
             }
-        });
+        }
         return newObject;
     }
     public mapExternalCriteriaToDalCriteria(table: string, externalCriteria: OmegaCriteria): OmegaCriteria {
@@ -207,7 +207,7 @@ export class OmegaRepository implements IOmegaRepository {
     }
     // private refactored functions
     private async createOrUpdateObject(omegaObject: OmegaBaseObject): Promise<string | number> {
-        const record = this.mapObjectToRecord(omegaObject);
+        const record = await this.mapObjectToRecord(omegaObject);
         const tableMap = this.getTableMap(omegaObject.objectSource);
         let identityValue = this.getRecordIdentityValue(tableMap, record);
         if (identityValue === undefined) {
@@ -364,7 +364,10 @@ export class OmegaRepository implements IOmegaRepository {
         });
         return returnArray;
     }
-    private convertFieldToProperty(mapField: OmegaField, omegaRecord: OmegaDalRecord): OmegaValue | never {
+    private async convertFieldToProperty(
+        mapField: OmegaField,
+        omegaRecord: OmegaDalRecord
+    ): Promise<OmegaValue | never> {
         if (!mapField.allowNull) {
             if (omegaRecord[mapField.name] === undefined || omegaRecord[mapField.name] === null) {
                 throwStandardError('Omega Repository', ErrorSource.OMEGA_DAL_RECORD, ErrorSuffix.MISSING_NO_NULL_FIELD);
@@ -374,28 +377,28 @@ export class OmegaRepository implements IOmegaRepository {
                 return null;
             }
         }
-        return this.transformToProperty(mapField, omegaRecord[mapField.name]);
+        return await this.transformToProperty(mapField, omegaRecord[mapField.name]);
     }
-    private transformToProperty(mapField: OmegaField, value: OmegaValue): OmegaValue {
+    private async transformToProperty(mapField: OmegaField, value: OmegaValue): Promise<OmegaValue> {
         if (typeof mapField.transformToProperty === 'function') {
-            return mapField.transformToProperty(value);
+            return await mapField.transformToProperty(value);
         }
         return value;
     }
-    private convertPropertyToField(
+    private async convertPropertyToField(
         mapField: OmegaField,
         field: OmegaFieldValuePair,
         isNewRecord: boolean = false
-    ): OmegaValue | undefined {
+    ): Promise<OmegaValue | undefined> {
         if (mapField.external && !mapField.locked) {
             this.validateField(mapField, field, isNewRecord);
-            return this.transformToField(mapField, field);
+            return await this.transformToField(mapField, field);
         }
         return undefined;
     }
-    private transformToField(mapField: OmegaField, field: OmegaFieldValuePair): OmegaValue {
+    private async transformToField(mapField: OmegaField, field: OmegaFieldValuePair): Promise<OmegaValue> {
         if (typeof mapField.transformToField === 'function') {
-            return mapField.transformToField(field.fieldValue);
+            return await mapField.transformToField(field.fieldValue);
         }
         return field.fieldValue;
     }

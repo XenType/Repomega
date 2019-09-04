@@ -12,6 +12,7 @@ export enum ErrorSource {
 export enum ErrorSuffix {
     NOT_FOUND = 'was not found',
     NOT_FOUND_EXAMPLE = 'was not found |{0}|',
+    NOT_INTERNAL_EXAMPLE = 'is not internal |{0}|',
     NO_CHILD_ASSOCIATION = 'has no child association to {0}',
     NO_TARGET_ASSOCIATION = 'has no lateral association to {0}',
     BAD_JSON_FORMAT = 'contains JSON format errors',

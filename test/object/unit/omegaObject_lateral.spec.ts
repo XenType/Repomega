@@ -119,12 +119,11 @@ describe('When using functions of an IOmegaObject', () => {
                 const spyContainer = createOmegaRepoSpies(mockRepo);
                 const testObject = createTestObject(mockRepo, 'User', 2, 11);
                 const expectedCriteria = createAndCriteria(['userId', 'optionGroupId'], [11, 1]);
-                const expectedLinkObject: Partial<OmegaObject> = {
-                    objectSource: 'UserOptionGroupLink',
-                    objectData: {
-                        userId: 11,
-                        optionGroupId: 1
-                    }
+                const expectedLinkObject = new OmegaObject(mockRepo);
+                expectedLinkObject.objectSource = 'UserOptionGroupLink';
+                expectedLinkObject.objectData = {
+                    userId: 11,
+                    optionGroupId: 1
                 };
                 await testObject.createLateralLink('OptionGroup', 1);
                 assertRepoUsageCounts(spyContainer, 1, 0, 1);

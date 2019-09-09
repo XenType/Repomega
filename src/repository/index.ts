@@ -37,4 +37,11 @@ export interface OmegaFieldValuePair {
     fieldName: string;
     fieldValue: OmegaValue | undefined;
 }
+export type RepositorySingleParameters = { source: string; objectId: string | number };
+export type RepositoryManyParameters = {
+    source: string;
+    criteria: OmegaCriteria;
+    fields?: string[];
+    values?: OmegaValue[];
+};
 export type FieldTransformFunction = (value: OmegaValue, savedValue?: OmegaValue) => Promise<OmegaValue>;

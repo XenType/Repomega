@@ -11,41 +11,34 @@ const testDal = createOmegaDalMock(testMapPath);
 const testRepo = new OmegaRepository(testDal);
 
 describe('When using mapping functions of an omegaRepository', () => {
-    describe('And calling createIdentityCriteria', () => {
+    describe('And calling buildIdentityCriteria', () => {
         test('If a valid table and objectId are passed the expected result is returned', () => {
             const expectedResult: OmegaCriteria = {
                 _and: [{ field: 'test_market_id', value: 12 }]
             };
-            const actualResult = testRepo.createIdentityCriteria('Market', 12);
+            const actualResult = testRepo.buildIdentityCriteria('Market', 12);
             expect(actualResult).toStrictEqual(expectedResult);
         });
         test('If an invalid table name is passed the expected exception is thrown', () => {
             let message = '';
             try {
-                testRepo.createIdentityCriteria('NotThere', 12);
+                testRepo.buildIdentityCriteria('NotThere', 12);
             } catch (error) {
                 message = error.message;
             }
-            expect(message).toEqual(
-                'Flat Mapper: ' +
-                    ErrorSource.REQUESTED_TABLE_MAP +
-                    ' ' +
-                    ErrorSuffix.NOT_FOUND_EXAMPLE.replace('{0}', 'NotThere')
-            );
+            expect(message).toEqual('Flat Mapper: ' + ErrorSource.REQUESTED_TABLE_MAP + ' ' + ErrorSuffix.NOT_FOUND_EXAMPLE.replace('{0}', 'NotThere'));
         });
         test('If mapper schema is not sufficient to create request the expected exception is thrown', () => {
             let message = '';
             try {
-                testRepo.createIdentityCriteria('InvalidMap', 12);
+                testRepo.buildIdentityCriteria('InvalidMap', 12);
             } catch (error) {
                 message = error.message;
             }
-            expect(message).toEqual(
-                'Omega Repository: ' + ErrorSource.REQUESTED_TABLE_MAP + ' ' + ErrorSuffix.BAD_OMEGA_FORMAT
-            );
+            expect(message).toEqual('Omega Repository: ' + ErrorSource.REQUESTED_TABLE_MAP + ' ' + ErrorSuffix.BAD_OMEGA_FORMAT);
         });
     });
-    describe('And calling mapExternalCriteriaToDalCriteria', () => {
+    describe('And calling buildDalCriteria', () => {
         test('If a valid table and one-AND criteria are passed the expected result is returned', () => {
             const expectedResult: OmegaCriteria = {
                 _and: [{ field: 'first_name', value: 'bob' }]
@@ -53,7 +46,7 @@ describe('When using mapping functions of an omegaRepository', () => {
             const inputCritera: OmegaCriteria = {
                 _and: [{ field: 'firstName', value: 'bob' }]
             };
-            const actualResult = testRepo.mapExternalCriteriaToDalCriteria('User', inputCritera);
+            const actualResult = testRepo.buildDalCriteria('User', inputCritera);
             expect(actualResult).toStrictEqual(expectedResult);
         });
         test('If a valid table and two-AND criteria are passed the expected result is returned', () => {
@@ -63,25 +56,17 @@ describe('When using mapping functions of an omegaRepository', () => {
             const inputCritera: OmegaCriteria = {
                 _and: [{ field: 'firstName', value: 'bob' }, { field: 'lastName', value: 'smith' }]
             };
-            const actualResult = testRepo.mapExternalCriteriaToDalCriteria('User', inputCritera);
+            const actualResult = testRepo.buildDalCriteria('User', inputCritera);
             expect(actualResult).toStrictEqual(expectedResult);
         });
         test('If a valid table and three-AND-subLast-one-AND criteria are passed the expected result is returned', () => {
             const expectedResult: OmegaCriteria = {
-                _and: [
-                    { field: 'first_name', value: 'bob' },
-                    { field: 'last_name', value: 'smith' },
-                    { _and: [{ field: 'last_rating', value: 1 }] }
-                ]
+                _and: [{ field: 'first_name', value: 'bob' }, { field: 'last_name', value: 'smith' }, { _and: [{ field: 'last_rating', value: 1 }] }]
             };
             const inputCritera: OmegaCriteria = {
-                _and: [
-                    { field: 'firstName', value: 'bob' },
-                    { field: 'lastName', value: 'smith' },
-                    { _and: [{ field: 'lastRating', value: 1 }] }
-                ]
+                _and: [{ field: 'firstName', value: 'bob' }, { field: 'lastName', value: 'smith' }, { _and: [{ field: 'lastRating', value: 1 }] }]
             };
-            const actualResult = testRepo.mapExternalCriteriaToDalCriteria('User', inputCritera);
+            const actualResult = testRepo.buildDalCriteria('User', inputCritera);
             expect(actualResult).toStrictEqual(expectedResult);
         });
         test('If a valid table and two-AND-subFirst-two-AND-subSecond-two-OR criteria are passed the expected result is returned', () => {
@@ -97,7 +82,7 @@ describe('When using mapping functions of an omegaRepository', () => {
                     { _or: [{ field: 'lastRating', value: 1 }, { field: 'userType', value: 'demo' }] }
                 ]
             };
-            const actualResult = testRepo.mapExternalCriteriaToDalCriteria('User', inputCritera);
+            const actualResult = testRepo.buildDalCriteria('User', inputCritera);
             expect(actualResult).toStrictEqual(expectedResult);
         });
         test('If a valid table and simple LinkTable criteria are passed the expected result is returned', () => {
@@ -121,7 +106,7 @@ describe('When using mapping functions of an omegaRepository', () => {
                     }
                 ]
             };
-            const actualResult = testRepo.mapExternalCriteriaToDalCriteria('User', inputCritera);
+            const actualResult = testRepo.buildDalCriteria('User', inputCritera);
             expect(actualResult).toStrictEqual(expectedResult);
         });
         test('If a valid table and a complex criteria are passed the expected result is returned', () => {
@@ -139,10 +124,7 @@ describe('When using mapping functions of an omegaRepository', () => {
                             },
                             { field: 'last_name', value: 'smith' },
                             {
-                                _and: [
-                                    { field: 'first_name', value: 'jane' },
-                                    { field: 'user_type', value: 'personal' }
-                                ]
+                                _and: [{ field: 'first_name', value: 'jane' }, { field: 'user_type', value: 'personal' }]
                             }
                         ]
                     }
@@ -168,7 +150,7 @@ describe('When using mapping functions of an omegaRepository', () => {
                     }
                 ]
             };
-            const actualResult = testRepo.mapExternalCriteriaToDalCriteria('User', inputCritera);
+            const actualResult = testRepo.buildDalCriteria('User', inputCritera);
             expect(actualResult).toStrictEqual(expectedResult);
         });
         test('If an invalid table name is passed the expected exception is thrown', () => {
@@ -177,16 +159,11 @@ describe('When using mapping functions of an omegaRepository', () => {
                 _and: [{ field: 'firstName', value: 'bob' }]
             };
             try {
-                testRepo.mapExternalCriteriaToDalCriteria('NotThere', inputCritera);
+                testRepo.buildDalCriteria('NotThere', inputCritera);
             } catch (error) {
                 message = error.message;
             }
-            expect(message).toEqual(
-                'Flat Mapper: ' +
-                    ErrorSource.REQUESTED_TABLE_MAP +
-                    ' ' +
-                    ErrorSuffix.NOT_FOUND_EXAMPLE.replace('{0}', 'NotThere')
-            );
+            expect(message).toEqual('Flat Mapper: ' + ErrorSource.REQUESTED_TABLE_MAP + ' ' + ErrorSuffix.NOT_FOUND_EXAMPLE.replace('{0}', 'NotThere'));
         });
         test('If mapper schema is not sufficient to create request the expected exception is thrown', () => {
             let message = '';
@@ -194,13 +171,11 @@ describe('When using mapping functions of an omegaRepository', () => {
                 _and: [{ field: 'notthere', value: 'bob' }]
             };
             try {
-                testRepo.mapExternalCriteriaToDalCriteria('User', inputCritera);
+                testRepo.buildDalCriteria('User', inputCritera);
             } catch (error) {
                 message = error.message;
             }
-            expect(message).toEqual(
-                'Omega Repository: ' + ErrorSource.REQUESTED_TABLE_MAP + ' ' + ErrorSuffix.BAD_OMEGA_FORMAT
-            );
+            expect(message).toEqual('Omega Repository: ' + ErrorSource.REQUESTED_TABLE_MAP + ' ' + ErrorSuffix.BAD_OMEGA_FORMAT);
         });
     });
     describe('And calling mapRecordToObject', () => {
@@ -223,7 +198,7 @@ describe('When using mapping functions of an omegaRepository', () => {
                 test_company_id: 1
             };
             const actualObject = await testRepo.mapRecordToObject('User', inputRecord);
-            const expectedObject = new OmegaObject(undefined);
+            const expectedObject = new OmegaObject(testRepo);
             expectedObject.objectSource = 'User';
             expectedObject.objectData = expectedObjectData;
             expect(actualObject).toEqual(expectedObject);
@@ -275,12 +250,7 @@ describe('When using mapping functions of an omegaRepository', () => {
             } catch (error) {
                 message = error.message;
             }
-            expect(message).toEqual(
-                'Flat Mapper: ' +
-                    ErrorSource.REQUESTED_TABLE_MAP +
-                    ' ' +
-                    ErrorSuffix.NOT_FOUND_EXAMPLE.replace('{0}', 'NotThere')
-            );
+            expect(message).toEqual('Flat Mapper: ' + ErrorSource.REQUESTED_TABLE_MAP + ' ' + ErrorSuffix.NOT_FOUND_EXAMPLE.replace('{0}', 'NotThere'));
         });
         test('If a record is missing an allowNull: false field the expected exception is thrown', async () => {
             let message = '';
@@ -297,9 +267,7 @@ describe('When using mapping functions of an omegaRepository', () => {
             } catch (error) {
                 message = error.message;
             }
-            expect(message).toEqual(
-                'Omega Repository: ' + ErrorSource.OMEGA_DAL_RECORD + ' ' + ErrorSuffix.MISSING_NO_NULL_FIELD
-            );
+            expect(message).toEqual('Omega Repository: ' + ErrorSource.OMEGA_DAL_RECORD + ' ' + ErrorSuffix.MISSING_NO_NULL_FIELD);
         });
     });
     describe('And calling mapObjectToRecord', () => {
@@ -418,9 +386,7 @@ describe('When using mapping functions of an omegaRepository', () => {
             } catch (error) {
                 message = error.message;
             }
-            expect(message).toEqual(
-                'Omega Repository: ' + ErrorSource.OMEGA_NEW_OBJECT + ' ' + ErrorSuffix.MISSING_NO_NULL_FIELD
-            );
+            expect(message).toEqual('Omega Repository: ' + ErrorSource.OMEGA_NEW_OBJECT + ' ' + ErrorSuffix.MISSING_NO_NULL_FIELD);
         });
     });
 });

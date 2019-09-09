@@ -1,41 +1,21 @@
 NEXT
-Internal fields will use transformToProperty and/or tranformToField
-- if not password
-    - if toField only, use on passed value and compare to persisted value
-    - if ToProperty is present, ignore toField then use on persistValue and compare to passed value
-- if password
-    - if ToField only, use on passed value and compare to persisted value
-    - if ToProperty is present, ignore ToField 
-    - if ToProperty is present, ignore toField then use on persistValue
-        - for password the transform function should return true or false, 
-        not the password's value
 
-OmegaObject.verifyInternalField
-- use repo's retrieveOneValue method
-- tests should include
-    - 'normal'
-    - transforms
-    - verify works with locked fields (other?)
-
-OmegaObject.saveInternalField
-- use repo's persistValue method
-- tests should include
-    - 'normal'
-    - transforms
-    - verify does not work with locked fields (others?)
-
-NEAR
-Unified error handling in repo
- - all DAL interactions should be trapped
- - capture existing internal errors and throw as one
-OmegaObject integration tests
-- primary, secondary and tertiary domain objects
-- parent/child 1/N tests
-- lateral tests
-Refactor large functions
-Refactor tests/fixtures
+    Refactor large functions
+    - IN PROGRESS
+    Unified error handling in repo
+    - all DAL interactions should be trapped
+    - capture existing internal errors and throw as one
+    Unified error handling in objects
+    - all Repo interactions should be trapped
+    - capture existing internal errors and throw as one
+    OmegaObject integration tests
+    - primary, secondary and tertiary domain objects
+    - parent/child 1/N tests
+    - lateral tests
+    Refactor tests/fixtures
 
 DISTANT
-Find missing test coverage
-NPM publishing
-Config / setup
+
+    Find missing test coverage
+    NPM publishing
+    Config / setup

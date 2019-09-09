@@ -25,15 +25,11 @@ export enum ErrorSuffix {
     NOT_A_NUMBER = 'not a number',
     NOT_A_DATE = 'not a date',
     NOT_IN_LIST = 'not an allowed value',
-    MISSING_CHARACTER = 'missing required character ({0})'
+    MISSING_CHARACTER = 'missing required character ({0})',
+    LOCKED_FIELD = 'read-only field'
 }
 
-export function throwStandardError(
-    location: string,
-    source: ErrorSource,
-    suffix: ErrorSuffix,
-    replacement?: string
-): never {
+export function throwStandardError(location: string, source: ErrorSource, suffix: ErrorSuffix, replacement?: string): never {
     let formattedSuffix: string = suffix;
     if (replacement) {
         formattedSuffix = suffix.replace('{0}', replacement);
@@ -42,18 +38,11 @@ export function throwStandardError(
 }
 
 export function throwFieldValidationError(fieldName: string, type: string, errors: string[]): never {
-    let errorMessage =
-        'Validation Error - ' + ErrorSource.VALIDATION_ERROR.replace('{0}', fieldName).replace('{1}', type) + ': ';
+    let errorMessage = 'Validation Error - ' + ErrorSource.VALIDATION_ERROR.replace('{0}', fieldName).replace('{1}', type) + ': ';
     errorMessage += errors.join(' | ');
     throw new Error(errorMessage);
 }
-export function throwAssociationError(
-    source: ErrorSource,
-    sourceParam: any,
-    suffix: ErrorSuffix,
-    suffixParam: any
-): never {
-    let errorMessage =
-        'Association Error = ' + source.replace('{0}', sourceParam) + ' ' + suffix.replace('{0}', suffixParam);
+export function throwAssociationError(source: ErrorSource, sourceParam: any, suffix: ErrorSuffix, suffixParam: any): never {
+    let errorMessage = 'Association Error = ' + source.replace('{0}', sourceParam) + ' ' + suffix.replace('{0}', suffixParam);
     throw new Error(errorMessage);
 }

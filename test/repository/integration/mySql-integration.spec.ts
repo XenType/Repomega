@@ -65,7 +65,7 @@ describe('When an omegaRepository with a live omegaDal connection', () => {
             retrieveOneMarket = insertedItems[0];
             destroyList.push({
                 table: testRepo.getTableMap('Market').name,
-                identityCriteria: testRepo.createIdentityCriteria('Market', retrieveOneMarket.objectData.id)
+                identityCriteria: testRepo.buildIdentityCriteria('Market', retrieveOneMarket.objectData.id)
             });
         });
         test('If passed a non-existing Id, null is returned', async () => {
@@ -87,7 +87,7 @@ describe('When an omegaRepository with a live omegaDal connection', () => {
             marketId = insertedMarket.objectData[testRepo.getTableMap('Market').identity];
             destroyList.push({
                 table: testRepo.getTableMap('Market').name,
-                identityCriteria: testRepo.createIdentityCriteria('Market', marketId)
+                identityCriteria: testRepo.buildIdentityCriteria('Market', marketId)
             });
             const newBasicItem = {
                 objectSource: 'BasicTests',
@@ -101,7 +101,7 @@ describe('When an omegaRepository with a live omegaDal connection', () => {
             basicId = insertedBasicItems[0].objectData[testRepo.getTableMap('BasicTests').identity];
             destroyList.push({
                 table: testRepo.getTableMap('BasicTests').name,
-                identityCriteria: testRepo.createIdentityCriteria('BasicTests', basicId)
+                identityCriteria: testRepo.buildIdentityCriteria('BasicTests', basicId)
             });
         });
         describe('And calling retrieveOneValue', () => {
@@ -116,11 +116,7 @@ describe('When an omegaRepository with a live omegaDal connection', () => {
         });
         describe('And calling persistValue', () => {
             test('The update succeeds even if the field is external', async () => {
-                await testRepo.persistValue(
-                    'BasicTests',
-                    { fieldName: 'internalTest', fieldValue: `--${basicId}` },
-                    basicId
-                );
+                await testRepo.persistValue('BasicTests', { fieldName: 'internalTest', fieldValue: `--${basicId}` }, basicId);
                 const savedValue = await testRepo.retrieveOneValue('BasicTests', 'internalTest', basicId);
                 expect(savedValue).toEqual(`--${basicId}`);
             });
@@ -138,9 +134,7 @@ describe('When an omegaRepository with a live omegaDal connection', () => {
             for (const insertedItem of insertedItems) {
                 destroyList.push({
                     table: testRepo.getTableMap('Market').name,
-                    identityCriteria: testRepo.createIdentityCriteria('Market', insertedItem.objectData.id as
-                        | string
-                        | number)
+                    identityCriteria: testRepo.buildIdentityCriteria('Market', insertedItem.objectData.id as string | number)
                 });
             }
         });
@@ -169,7 +163,7 @@ describe('When an omegaRepository with a live omegaDal connection', () => {
             deleteOneMarket = insertedItems[0];
             destroyList.push({
                 table: testRepo.getTableMap('Market').name,
-                identityCriteria: testRepo.createIdentityCriteria('Market', deleteOneMarket.objectData.id)
+                identityCriteria: testRepo.buildIdentityCriteria('Market', deleteOneMarket.objectData.id)
             });
         });
         test('If passed a non-existing Id, 0 is returned', async () => {
@@ -193,9 +187,7 @@ describe('When an omegaRepository with a live omegaDal connection', () => {
             for (const insertedItem of insertedItems) {
                 destroyList.push({
                     table: testRepo.getTableMap('Market').name,
-                    identityCriteria: testRepo.createIdentityCriteria('Market', insertedItem.objectData.id as
-                        | string
-                        | number)
+                    identityCriteria: testRepo.buildIdentityCriteria('Market', insertedItem.objectData.id as string | number)
                 });
             }
         });
@@ -221,16 +213,11 @@ describe('When an omegaRepository with a live omegaDal connection', () => {
     });
 });
 
-async function runPersistTest(
-    itemArray: OmegaObject[],
-    destroyList: Array<{ table: string; identityCriteria: OmegaCriteria }>
-): Promise<OmegaObject[] | void> {
+async function runPersistTest(itemArray: OmegaObject[], destroyList: Array<{ table: string; identityCriteria: OmegaCriteria }>): Promise<OmegaObject[] | void> {
     const savedItems = await testRepo.persist(itemArray, true);
     for (const savedItem of savedItems as OmegaObject[]) {
         const itemIdentityField = testRepo.getTableMap(savedItem.objectSource).identity;
-        const identityCriteria = testRepo.createIdentityCriteria(savedItem.objectSource, savedItem.objectData[
-            itemIdentityField
-        ] as string | number);
+        const identityCriteria = testRepo.buildIdentityCriteria(savedItem.objectSource, savedItem.objectData[itemIdentityField] as string | number);
         destroyList.push({ table: testRepo.getTableMap(savedItem.objectSource).name, identityCriteria });
         expect(savedItem.objectData[itemIdentityField]).not.toBeUndefined();
         expect(savedItem.objectData[itemIdentityField]).not.toBeNull();

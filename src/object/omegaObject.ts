@@ -5,7 +5,7 @@ import { throwAssociationError, ErrorSource, ErrorSuffix, throwStandardError } f
 import { OmegaLinkPath } from '../mapper';
 import { OmegaCriteria, OmegaCriterionLinkTable } from '../dal';
 import { cloneDeep } from 'lodash';
-import { OmegaValue } from '../common/types';
+import { OmegaValue, OmegaRecordId } from '../common/types';
 import { OmegaBaseObject } from '.';
 import { OmegaRepository } from '../repository/omegaRepository';
 
@@ -14,6 +14,7 @@ const extClassName = 'OmegaObject';
 
 export class OmegaObject implements OmegaBaseObject {
     private sourceRepo: IOmegaRepository;
+    public repoIndex: number;
     public tableMap: OmegaTableMap;
     public objectSource: string;
     public objectData: OmegaObjectData;
@@ -42,7 +43,7 @@ export class OmegaObject implements OmegaBaseObject {
         this.initTableMap();
         this.validateInternalField(fieldName);
         const fieldValuePair: OmegaFieldValuePair = { fieldName, fieldValue };
-        this.sourceRepo.persistValue(this.objectSource, fieldValuePair, this.objectData[this.tableMap.identity] as string | number);
+        this.sourceRepo.persistValue(this.objectSource, fieldValuePair, this.objectData[this.tableMap.identity] as OmegaRecordId);
         return false;
     }
 
@@ -64,7 +65,7 @@ export class OmegaObject implements OmegaBaseObject {
         const sortedMap = this.getLateralAssociationMap(target);
         return this.retrieveOneToMany(target, sortedMap);
     }
-    public async createLateralLink(target: string, targetLinkValue: string | number): Promise<void> {
+    public async createLateralLink(target: string, targetLinkValue: OmegaRecordId): Promise<void> {
         this.initTableMap();
         this.validateLateralAssociation(target);
         const { source, criteria, fields, values } = this.buildLateralLinksParameters(target, targetLinkValue);
@@ -74,7 +75,7 @@ export class OmegaObject implements OmegaBaseObject {
         }
         return;
     }
-    public async deleteLateralLink(target: string, targetLinkValue: string | number): Promise<void> {
+    public async deleteLateralLink(target: string, targetLinkValue: OmegaRecordId): Promise<void> {
         this.initTableMap();
         this.validateLateralAssociation(target);
         const { source, criteria } = this.buildLateralLinksParameters(target, targetLinkValue);
@@ -133,7 +134,7 @@ export class OmegaObject implements OmegaBaseObject {
 
     // repository interactions
     private async retrieveFieldValue(field: string): Promise<OmegaValue> {
-        return this.sourceRepo.retrieveOneValue(this.objectSource, field, this.objectData[this.tableMap.identity] as string | number);
+        return this.sourceRepo.retrieveOneValue(this.objectSource, field, this.objectData[this.tableMap.identity] as OmegaRecordId);
     }
     private async retrieveOneToOne(table: string, sortedMap: OmegaLinkPath[], reversePath?: boolean): Promise<OmegaObject> {
         const results = await this.retrieveOneToMany(table, sortedMap, reversePath);
@@ -183,7 +184,7 @@ export class OmegaObject implements OmegaBaseObject {
     }
 
     // argument builders
-    private buildLateralLinksParameters(target: string, targetLinkValue: string | number): RepositoryManyParameters {
+    private buildLateralLinksParameters(target: string, targetLinkValue: OmegaRecordId): RepositoryManyParameters {
         const sortedMap = this.getLateralAssociationMap(target);
         const source = sortedMap[0].targetTable;
         const sourceLinkField = sortedMap[0].targetId;

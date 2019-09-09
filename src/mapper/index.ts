@@ -1,4 +1,5 @@
 import { FieldTransformFunction } from '../repository';
+import { OmegaRecordId } from '../common/types';
 
 export interface IOmegaMapper {
     getTableIndex(): OmegaTableIndex;
@@ -38,14 +39,16 @@ export interface OmegaField {
     transformToProperty?: FieldTransformFunction;
 }
 export interface OmegaFieldValidation {
-    type: string;
+    type: OmegaValidationType;
     minLength?: number;
     maxLength?: number;
     minValue?: number;
     maxValue?: number;
-    enumList?: Array<string | number>;
+    enumList?: Array<OmegaRecordId>;
     requireCharacters?: OmegaFieldRequiredCharacters;
 }
+export type OmegaValidationType =  'string' |'number' |'datetime' |'boolean' |'enum' |'password';
+
 export interface OmegaFieldRequiredCharacters {
     lowerCase?: boolean;
     upperCase?: boolean;

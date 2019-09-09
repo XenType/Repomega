@@ -2,7 +2,7 @@ import { createOmegaRepoMock, createOmegaRepoSpies, assertRepoUsageCounts } from
 import { OmegaObject } from '../../../src/object/omegaObject';
 import { cloneDeep } from 'lodash';
 import { createTestObject } from '../../fixtures';
-import { OmegaValue } from '../../../src/common/types';
+import { OmegaValue, OmegaRecordId } from '../../../src/common/types';
 import { OmegaFieldValuePair } from '../../../src/repository';
 
 describe('When using functions of an IOmegaObject', () => {
@@ -77,7 +77,7 @@ describe('When using functions of an IOmegaObject', () => {
         });
         describe('If the field exists and is "internal"', () => {
             test('It interacts with the Repository as expected', async () => {
-                const mockRepoRetrieveOneValue = async (a: string, b: string, c: string | number): Promise<OmegaValue> => {
+                const mockRepoRetrieveOneValue = async (a: string, b: string, c: OmegaRecordId): Promise<OmegaValue> => {
                     return 'testing';
                 };
                 const mockRepo = createOmegaRepoMock();
@@ -89,7 +89,7 @@ describe('When using functions of an IOmegaObject', () => {
                 expect(spyContainer.spyRetrieveOneValue).toBeCalledWith('BasicTests', 'internalTest', 1);
             });
             test('It returns true if the values match', async () => {
-                const mockRepoRetrieveOneValue = async (a: string, b: string, c: string | number): Promise<OmegaValue> => {
+                const mockRepoRetrieveOneValue = async (a: string, b: string, c: OmegaRecordId): Promise<OmegaValue> => {
                     return 'testing';
                 };
                 const mockRepo = createOmegaRepoMock();
@@ -99,7 +99,7 @@ describe('When using functions of an IOmegaObject', () => {
                 expect(result).toEqual(true);
             });
             test('It returns false if the values do not match', async () => {
-                const mockRepoRetrieveOneValue = async (a: string, b: string, c: string | number): Promise<OmegaValue> => {
+                const mockRepoRetrieveOneValue = async (a: string, b: string, c: OmegaRecordId): Promise<OmegaValue> => {
                     return 'testing';
                 };
                 const mockRepo = createOmegaRepoMock();
@@ -111,7 +111,7 @@ describe('When using functions of an IOmegaObject', () => {
         });
         describe('If the field exists and is locked', () => {
             test('It interacts with the Repository as expected', async () => {
-                const mockRepoRetrieveOneValue = async (a: string, b: string, c: string | number): Promise<OmegaValue> => {
+                const mockRepoRetrieveOneValue = async (a: string, b: string, c: OmegaRecordId): Promise<OmegaValue> => {
                     return 'testing';
                 };
                 const mockRepo = createOmegaRepoMock();
@@ -123,7 +123,7 @@ describe('When using functions of an IOmegaObject', () => {
                 expect(spyContainer.spyRetrieveOneValue).toBeCalledWith('BasicTests', 'lockedTest', 1);
             });
             test('It returns true if the values match', async () => {
-                const mockRepoRetrieveOneValue = async (a: string, b: string, c: string | number): Promise<OmegaValue> => {
+                const mockRepoRetrieveOneValue = async (a: string, b: string, c: OmegaRecordId): Promise<OmegaValue> => {
                     return 'testing';
                 };
                 const mockRepo = createOmegaRepoMock();
@@ -133,7 +133,7 @@ describe('When using functions of an IOmegaObject', () => {
                 expect(result).toEqual(true);
             });
             test('It returns false if the values do not match', async () => {
-                const mockRepoRetrieveOneValue = async (a: string, b: string, c: string | number): Promise<OmegaValue> => {
+                const mockRepoRetrieveOneValue = async (a: string, b: string, c: OmegaRecordId): Promise<OmegaValue> => {
                     return 'testing';
                 };
                 const mockRepo = createOmegaRepoMock();
@@ -146,7 +146,7 @@ describe('When using functions of an IOmegaObject', () => {
         describe('With non-password types', () => {
             describe('If the field exists and has only a "toProperty" transformation', () => {
                 test('It interacts with the Repository as expected', async () => {
-                    const mockRepoRetrieveOneValue = async (a: string, b: string, c: string | number): Promise<OmegaValue> => {
+                    const mockRepoRetrieveOneValue = async (a: string, b: string, c: OmegaRecordId): Promise<OmegaValue> => {
                         return 'testing';
                     };
                     const mockRepo = createOmegaRepoMock();
@@ -162,7 +162,7 @@ describe('When using functions of an IOmegaObject', () => {
                     expect(spyContainer.spyRetrieveOneValue).toBeCalledWith('BasicTests', 'internalTest', 1);
                 });
                 test('It returns true if the values match', async () => {
-                    const mockRepoRetrieveOneValue = async (a: string, b: string, c: string | number): Promise<OmegaValue> => {
+                    const mockRepoRetrieveOneValue = async (a: string, b: string, c: OmegaRecordId): Promise<OmegaValue> => {
                         return 'testing';
                     };
                     const mockRepo = createOmegaRepoMock();
@@ -176,7 +176,7 @@ describe('When using functions of an IOmegaObject', () => {
                     expect(result).toEqual(true);
                 });
                 test('It returns false if the values do not match', async () => {
-                    const mockRepoRetrieveOneValue = async (a: string, b: string, c: string | number): Promise<OmegaValue> => {
+                    const mockRepoRetrieveOneValue = async (a: string, b: string, c: OmegaRecordId): Promise<OmegaValue> => {
                         return 'testing';
                     };
                     const mockRepo = createOmegaRepoMock();
@@ -192,7 +192,7 @@ describe('When using functions of an IOmegaObject', () => {
             });
             describe('If the field exists and has a "toField" and "toProperty" transformation', () => {
                 test('It interacts with the Repository as expected', async () => {
-                    const mockRepoRetrieveOneValue = async (a: string, b: string, c: string | number): Promise<OmegaValue> => {
+                    const mockRepoRetrieveOneValue = async (a: string, b: string, c: OmegaRecordId): Promise<OmegaValue> => {
                         return 'testing';
                     };
                     const mockRepo = createOmegaRepoMock();
@@ -215,7 +215,7 @@ describe('When using functions of an IOmegaObject', () => {
                     expect(spyContainer.spyRetrieveOneValue).toBeCalledWith('BasicTests', 'internalTest', 1);
                 });
                 test('It returns true if the values match', async () => {
-                    const mockRepoRetrieveOneValue = async (a: string, b: string, c: string | number): Promise<OmegaValue> => {
+                    const mockRepoRetrieveOneValue = async (a: string, b: string, c: OmegaRecordId): Promise<OmegaValue> => {
                         return 'testing';
                     };
                     const mockRepo = createOmegaRepoMock();
@@ -236,7 +236,7 @@ describe('When using functions of an IOmegaObject', () => {
                     expect(result).toEqual(true);
                 });
                 test('It returns false if the values do not match', async () => {
-                    const mockRepoRetrieveOneValue = async (a: string, b: string, c: string | number): Promise<OmegaValue> => {
+                    const mockRepoRetrieveOneValue = async (a: string, b: string, c: OmegaRecordId): Promise<OmegaValue> => {
                         return 'testing';
                     };
                     const mockRepo = createOmegaRepoMock();
@@ -259,7 +259,7 @@ describe('When using functions of an IOmegaObject', () => {
             });
             describe('If the field exists and has only a "toField" transformation', () => {
                 test('It interacts with the Repository as expected', async () => {
-                    const mockRepoRetrieveOneValue = async (a: string, b: string, c: string | number): Promise<OmegaValue> => {
+                    const mockRepoRetrieveOneValue = async (a: string, b: string, c: OmegaRecordId): Promise<OmegaValue> => {
                         return '--testing--';
                     };
                     const mockRepo = createOmegaRepoMock();
@@ -275,7 +275,7 @@ describe('When using functions of an IOmegaObject', () => {
                     expect(spyContainer.spyRetrieveOneValue).toBeCalledWith('BasicTests', 'internalTest', 1);
                 });
                 test('It returns true if the values match', async () => {
-                    const mockRepoRetrieveOneValue = async (a: string, b: string, c: string | number): Promise<OmegaValue> => {
+                    const mockRepoRetrieveOneValue = async (a: string, b: string, c: OmegaRecordId): Promise<OmegaValue> => {
                         return '--testing--';
                     };
                     const mockRepo = createOmegaRepoMock();
@@ -289,7 +289,7 @@ describe('When using functions of an IOmegaObject', () => {
                     expect(result).toEqual(true);
                 });
                 test('It returns false if the values do not match', async () => {
-                    const mockRepoRetrieveOneValue = async (a: string, b: string, c: string | number): Promise<OmegaValue> => {
+                    const mockRepoRetrieveOneValue = async (a: string, b: string, c: OmegaRecordId): Promise<OmegaValue> => {
                         return '--testing--';
                     };
                     const mockRepo = createOmegaRepoMock();
@@ -307,7 +307,7 @@ describe('When using functions of an IOmegaObject', () => {
         describe('With password types', () => {
             describe('If the field exists and has only a "toProperty" transformation', () => {
                 test('It interacts with the Repository as expected', async () => {
-                    const mockRepoRetrieveOneValue = async (a: string, b: string, c: string | number): Promise<OmegaValue> => {
+                    const mockRepoRetrieveOneValue = async (a: string, b: string, c: OmegaRecordId): Promise<OmegaValue> => {
                         return 'testing';
                     };
                     const mockRepo = createOmegaRepoMock();
@@ -323,7 +323,7 @@ describe('When using functions of an IOmegaObject', () => {
                     expect(spyContainer.spyRetrieveOneValue).toBeCalledWith('BasicTests', 'passwordTest', 1);
                 });
                 test('It returns true if the values match', async () => {
-                    const mockRepoRetrieveOneValue = async (a: string, b: string, c: string | number): Promise<OmegaValue> => {
+                    const mockRepoRetrieveOneValue = async (a: string, b: string, c: OmegaRecordId): Promise<OmegaValue> => {
                         return 'testing';
                     };
                     const mockRepo = createOmegaRepoMock();
@@ -341,7 +341,7 @@ describe('When using functions of an IOmegaObject', () => {
                     expect(result).toEqual(true);
                 });
                 test('It returns false if the values do not match', async () => {
-                    const mockRepoRetrieveOneValue = async (a: string, b: string, c: string | number): Promise<OmegaValue> => {
+                    const mockRepoRetrieveOneValue = async (a: string, b: string, c: OmegaRecordId): Promise<OmegaValue> => {
                         return 'testing';
                     };
                     const mockRepo = createOmegaRepoMock();
@@ -361,7 +361,7 @@ describe('When using functions of an IOmegaObject', () => {
             });
             describe('If the field exists and has a "toField" and "toProperty" transformation', () => {
                 test('It interacts with the Repository as expected', async () => {
-                    const mockRepoRetrieveOneValue = async (a: string, b: string, c: string | number): Promise<OmegaValue> => {
+                    const mockRepoRetrieveOneValue = async (a: string, b: string, c: OmegaRecordId): Promise<OmegaValue> => {
                         return 'testing';
                     };
                     const mockRepo = createOmegaRepoMock();
@@ -388,7 +388,7 @@ describe('When using functions of an IOmegaObject', () => {
                     expect(spyContainer.spyRetrieveOneValue).toBeCalledWith('BasicTests', 'passwordTest', 1);
                 });
                 test('It returns true if the values match', async () => {
-                    const mockRepoRetrieveOneValue = async (a: string, b: string, c: string | number): Promise<OmegaValue> => {
+                    const mockRepoRetrieveOneValue = async (a: string, b: string, c: OmegaRecordId): Promise<OmegaValue> => {
                         return 'testing';
                     };
                     const mockRepo = createOmegaRepoMock();
@@ -413,7 +413,7 @@ describe('When using functions of an IOmegaObject', () => {
                     expect(result).toEqual(true);
                 });
                 test('It returns false if the values do not match', async () => {
-                    const mockRepoRetrieveOneValue = async (a: string, b: string, c: string | number): Promise<OmegaValue> => {
+                    const mockRepoRetrieveOneValue = async (a: string, b: string, c: OmegaRecordId): Promise<OmegaValue> => {
                         return 'testing';
                     };
                     const mockRepo = createOmegaRepoMock();
@@ -440,7 +440,7 @@ describe('When using functions of an IOmegaObject', () => {
             });
             describe('If the field exists and has only a "toField" transformation', () => {
                 test('It interacts with the Repository as expected', async () => {
-                    const mockRepoRetrieveOneValue = async (a: string, b: string, c: string | number): Promise<OmegaValue> => {
+                    const mockRepoRetrieveOneValue = async (a: string, b: string, c: OmegaRecordId): Promise<OmegaValue> => {
                         return '--testing--';
                     };
                     const mockRepo = createOmegaRepoMock();
@@ -456,7 +456,7 @@ describe('When using functions of an IOmegaObject', () => {
                     expect(spyContainer.spyRetrieveOneValue).toBeCalledWith('BasicTests', 'passwordTest', 1);
                 });
                 test('It returns true if the values match', async () => {
-                    const mockRepoRetrieveOneValue = async (a: string, b: string, c: string | number): Promise<OmegaValue> => {
+                    const mockRepoRetrieveOneValue = async (a: string, b: string, c: OmegaRecordId): Promise<OmegaValue> => {
                         return '--testing--';
                     };
                     const mockRepo = createOmegaRepoMock();
@@ -470,7 +470,7 @@ describe('When using functions of an IOmegaObject', () => {
                     expect(result).toEqual(true);
                 });
                 test('It returns false if the values do not match', async () => {
-                    const mockRepoRetrieveOneValue = async (a: string, b: string, c: string | number): Promise<OmegaValue> => {
+                    const mockRepoRetrieveOneValue = async (a: string, b: string, c: OmegaRecordId): Promise<OmegaValue> => {
                         return '--testing--';
                     };
                     const mockRepo = createOmegaRepoMock();
@@ -489,7 +489,7 @@ describe('When using functions of an IOmegaObject', () => {
     describe('And calling saveInternalField', () => {
         describe('If the field does not exist', () => {
             test('It interacts with the Repository as expected', async () => {
-                const mockRepoPersistValue = async (source: string, fieldValuePair: OmegaFieldValuePair, objectId: string | number): Promise<void> => {
+                const mockRepoPersistValue = async (source: string, fieldValuePair: OmegaFieldValuePair, objectId: OmegaRecordId): Promise<void> => {
                     return;
                 };
                 const mockRepo = createOmegaRepoMock();
@@ -503,7 +503,7 @@ describe('When using functions of an IOmegaObject', () => {
             });
             test('It throws the expected error', async () => {
                 let message = '';
-                const mockRepoPersistValue = async (source: string, fieldValuePair: OmegaFieldValuePair, objectId: string | number): Promise<void> => {
+                const mockRepoPersistValue = async (source: string, fieldValuePair: OmegaFieldValuePair, objectId: OmegaRecordId): Promise<void> => {
                     return;
                 };
                 const mockRepo = createOmegaRepoMock();
@@ -519,7 +519,7 @@ describe('When using functions of an IOmegaObject', () => {
         });
         describe('If the field exists and is "external"', () => {
             test('It interacts with the Repository as expected', async () => {
-                const mockRepoPersistValue = async (source: string, fieldValuePair: OmegaFieldValuePair, objectId: string | number): Promise<void> => {
+                const mockRepoPersistValue = async (source: string, fieldValuePair: OmegaFieldValuePair, objectId: OmegaRecordId): Promise<void> => {
                     return;
                 };
                 const mockRepo = createOmegaRepoMock();
@@ -533,7 +533,7 @@ describe('When using functions of an IOmegaObject', () => {
             });
             test('It throws the expected error', async () => {
                 let message = '';
-                const mockRepoPersistValue = async (source: string, fieldValuePair: OmegaFieldValuePair, objectId: string | number): Promise<void> => {
+                const mockRepoPersistValue = async (source: string, fieldValuePair: OmegaFieldValuePair, objectId: OmegaRecordId): Promise<void> => {
                     return;
                 };
                 const mockRepo = createOmegaRepoMock();
@@ -549,7 +549,7 @@ describe('When using functions of an IOmegaObject', () => {
         });
         describe('If the field exists and is an internal field', () => {
             test('It interacts with the Repository as expected', async () => {
-                const mockRepoPersistValue = async (source: string, fieldValuePair: OmegaFieldValuePair, objectId: string | number): Promise<void> => {
+                const mockRepoPersistValue = async (source: string, fieldValuePair: OmegaFieldValuePair, objectId: OmegaRecordId): Promise<void> => {
                     return;
                 };
                 const mockRepo = createOmegaRepoMock();

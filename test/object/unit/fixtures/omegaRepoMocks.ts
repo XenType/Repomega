@@ -14,7 +14,7 @@ import { OmegaCriteria } from '../../../../src/dal';
 import { FlatMapper } from '../../../../src/mapper/flatMapper';
 import { OmegaTableMap, OmegaField } from '../../../../src/mapper';
 import { OmegaObject } from '../../../../src/object/omegaObject';
-import { OmegaValue } from '../../../../src/common/types';
+import { OmegaValue, OmegaRecordId } from '../../../../src/common/types';
 
 const testMapPath = 'test/dal/integration/fixtures/integration-map.json';
 
@@ -153,24 +153,24 @@ class MockOmegaRepository implements IOmegaRepository {
     public persistValue: RepositoryActSingleValue = async (
         a: string,
         b: OmegaFieldValuePair,
-        c: string | number
+        c: OmegaRecordId
     ): Promise<void> => {
         return;
     };
-    public retrieveOne: RepositoryGetSingle = async (a: string, b: string | number): Promise<OmegaObject> => {
+    public retrieveOne: RepositoryGetSingle = async (a: string, b: OmegaRecordId): Promise<OmegaObject> => {
         return null;
     };
     public retrieveOneValue: RepositoryGetSingleValue = async (
         a: string,
         b: string,
-        c: string | number
+        c: OmegaRecordId
     ): Promise<OmegaValue> => {
         return null;
     };
     public retrieveMany: RepositoryGetMany = async (a: string, b: OmegaCriteria): Promise<OmegaObject[]> => {
         return [];
     };
-    public deleteOne: RepositoryActSingle = async (a: string, b: string | number): Promise<number> => {
+    public deleteOne: RepositoryActSingle = async (a: string, b: OmegaRecordId): Promise<number> => {
         return 0;
     };
     public deleteMany: RepositoryActMany = async (a: string, b: OmegaCriteria): Promise<number> => {

@@ -96,7 +96,7 @@ describe('When using FlatMapper', () => {
             const goodFilePath = 'test/mapper/unit/fixtures/flat-table-map-fixture.json';
             const mapper = new FlatMapper(goodFilePath);
             try {
-                mapper.addFieldTransform('notfound', 'notfoundfield', function(a) {
+                mapper.addFieldTransform('notfound', 'notfoundfield', async function(a) {
                     return a;
                 });
             } catch (error) {
@@ -114,7 +114,7 @@ describe('When using FlatMapper', () => {
             const goodFilePath = 'test/mapper/unit/fixtures/flat-table-map-fixture.json';
             const mapper = new FlatMapper(goodFilePath);
             try {
-                mapper.addFieldTransform('Market', 'notfoundfield', function(a) {
+                mapper.addFieldTransform('Market', 'notfoundfield', async function(a) {
                     return a;
                 });
             } catch (error) {
@@ -131,23 +131,23 @@ describe('When using FlatMapper', () => {
             let message = '';
             const goodFilePath = 'test/mapper/unit/fixtures/flat-table-map-fixture.json';
             const mapper = new FlatMapper(goodFilePath);
-            const transform = a => {
+            const transform = async a => {
                 return `--${a}--`;
             };
             mapper.addFieldTransform('User', 'password', transform);
             const tableMap = mapper.getTableMap('User');
             expect(tableMap.fields['password'].transformToField).toStrictEqual(transform);
         });
-        test('The provided function returns the expected result after being added', () => {
+        test('The provided function returns the expected result after being added', async () => {
             let message = '';
             const goodFilePath = 'test/mapper/unit/fixtures/flat-table-map-fixture.json';
             const mapper = new FlatMapper(goodFilePath);
-            const transform = a => {
+            const transform = async a => {
                 return `--${a}--`;
             };
             mapper.addFieldTransform('User', 'password', transform);
             const tableMap = mapper.getTableMap('User');
-            const value = tableMap.fields['password'].transformToField('word');
+            const value = await tableMap.fields['password'].transformToField('word');
             expect(value).toEqual(`--word--`);
         });
     });
@@ -157,7 +157,7 @@ describe('When using FlatMapper', () => {
             const goodFilePath = 'test/mapper/unit/fixtures/flat-table-map-fixture.json';
             const mapper = new FlatMapper(goodFilePath);
             try {
-                mapper.addPropertyTransform('notfound', 'notfoundfield', function(a) {
+                mapper.addPropertyTransform('notfound', 'notfoundfield', async function(a) {
                     return a;
                 });
             } catch (error) {
@@ -175,7 +175,7 @@ describe('When using FlatMapper', () => {
             const goodFilePath = 'test/mapper/unit/fixtures/flat-table-map-fixture.json';
             const mapper = new FlatMapper(goodFilePath);
             try {
-                mapper.addPropertyTransform('Market', 'notfoundfield', function(a) {
+                mapper.addPropertyTransform('Market', 'notfoundfield', async function(a) {
                     return a;
                 });
             } catch (error) {
@@ -192,23 +192,23 @@ describe('When using FlatMapper', () => {
             let message = '';
             const goodFilePath = 'test/mapper/unit/fixtures/flat-table-map-fixture.json';
             const mapper = new FlatMapper(goodFilePath);
-            const transform = a => {
+            const transform = async a => {
                 return `--${a}--`;
             };
             mapper.addPropertyTransform('User', 'password', transform);
             const tableMap = mapper.getTableMap('User');
             expect(tableMap.fields['password'].transformToProperty).toStrictEqual(transform);
         });
-        test('The provided function returns the expected result after being added', () => {
+        test('The provided function returns the expected result after being added', async () => {
             let message = '';
             const goodFilePath = 'test/mapper/unit/fixtures/flat-table-map-fixture.json';
             const mapper = new FlatMapper(goodFilePath);
-            const transform = a => {
+            const transform = async a => {
                 return `--${a}--`;
             };
             mapper.addPropertyTransform('User', 'password', transform);
             const tableMap = mapper.getTableMap('User');
-            const value = tableMap.fields['password'].transformToProperty('word');
+            const value = await tableMap.fields['password'].transformToProperty('word');
             expect(value).toEqual(`--word--`);
         });
     });
@@ -249,7 +249,7 @@ describe('When using FlatMapper', () => {
             let message = '';
             const goodFilePath = 'test/mapper/unit/fixtures/flat-table-map-fixture.json';
             const mapper = new FlatMapper(goodFilePath);
-            const transform = a => {
+            const transform = async a => {
                 return `--${a}--`;
             };
             mapper.addFieldTransform('User', 'password', transform);
@@ -295,7 +295,7 @@ describe('When using FlatMapper', () => {
             let message = '';
             const goodFilePath = 'test/mapper/unit/fixtures/flat-table-map-fixture.json';
             const mapper = new FlatMapper(goodFilePath);
-            const transform = a => {
+            const transform = async a => {
                 return `--${a}--`;
             };
             mapper.addPropertyTransform('User', 'password', transform);

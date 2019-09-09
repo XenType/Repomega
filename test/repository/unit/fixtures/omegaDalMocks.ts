@@ -1,6 +1,7 @@
 import { IOmegaDal, OmegaDalRecord, OmegaCriteria } from '../../../../src/dal';
 import { FlatMapper } from '../../../../src/mapper/flatMapper';
 import { cloneDeep } from 'lodash';
+import { OmegaRecordId } from '../../../../src/common/types';
 
 export function assertDalUsageCounts(
     spyContainer: DalSpies,
@@ -72,7 +73,7 @@ export function createOmegaDalMock(
 
 const genericOmegaDal = {
     mapper: null,
-    create(table: string, newRecord: OmegaDalRecord): Promise<string | number> {
+    create(table: string, newRecord: OmegaDalRecord): Promise<OmegaRecordId> {
         return null;
     },
     read(table: string, criteria: OmegaCriteria): Promise<OmegaDalRecord[]> {

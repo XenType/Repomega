@@ -24,6 +24,7 @@ export enum ErrorSuffix {
     MAX_VALUE = 'maximum value ({0})',
     NOT_A_NUMBER = 'not a number',
     NOT_A_DATE = 'not a date',
+    NOT_A_BOOLEAN = 'not true/false',
     NOT_IN_LIST = 'not an allowed value',
     MISSING_CHARACTER = 'missing required character ({0})',
     LOCKED_FIELD = 'read-only field'

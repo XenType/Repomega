@@ -6,7 +6,7 @@ import { OmegaTableMap } from '../mapper';
 import { OmegaObjectData, OmegaBaseObject } from '../object';
 import { OmegaObject } from '../object/omegaObject';
 import { types } from 'util';
-import { OmegaValue } from '../../src/common/types';
+import { OmegaValue, OmegaRecordId } from '../../src/common/types';
 
 export class OmegaRepository implements IOmegaRepository {
     private omegaMapper: IOmegaMapper;
@@ -22,8 +22,7 @@ export class OmegaRepository implements IOmegaRepository {
         }
         return;
     }
-
-    public async persistValue(source: string, fieldValuePair: OmegaFieldValuePair, objectId: string | number): Promise<void> {
+    public async persistValue(source: string, fieldValuePair: OmegaFieldValuePair, objectId: OmegaRecordId): Promise<void> {
         const identityCriteria = this.buildIdentityCriteria(source, objectId);
         const tableMap = this.getTableMap(source);
         const mapField = tableMap.fields[fieldValuePair.fieldName];
@@ -33,8 +32,7 @@ export class OmegaRepository implements IOmegaRepository {
         await this.omegaDal.update(tableMap.name, partialUpdate, identityCriteria);
         return;
     }
-
-    public async retrieveOne(source: string, objectId: string | number): Promise<OmegaObject> {
+    public async retrieveOne(source: string, objectId: OmegaRecordId): Promise<OmegaObject> {
         const identityCriteria = this.buildIdentityCriteria(source, objectId);
         const tableMap = this.getTableMap(source);
         const fieldList = this.buildExternalFieldList(tableMap);
@@ -45,7 +43,7 @@ export class OmegaRepository implements IOmegaRepository {
         }
         return null;
     }
-    public async retrieveOneValue(source: string, field: string, objectId: string | number): Promise<OmegaValue> {
+    public async retrieveOneValue(source: string, field: string, objectId: OmegaRecordId): Promise<OmegaValue> {
         const identityCriteria = this.buildIdentityCriteria(source, objectId);
         const tableMap = this.getTableMap(source);
         const mapField = tableMap.fields[field];
@@ -66,7 +64,7 @@ export class OmegaRepository implements IOmegaRepository {
         }
         return [];
     }
-    public async deleteOne(source: string, objectId: string | number): Promise<number> {
+    public async deleteOne(source: string, objectId: OmegaRecordId): Promise<number> {
         const omegaCriteria = this.buildIdentityCriteria(source, objectId);
         const tableMap = this.getTableMap(source);
         const affectedRecords = await this.omegaDal.delete(tableMap.name, omegaCriteria);
@@ -127,9 +125,6 @@ export class OmegaRepository implements IOmegaRepository {
         }
         return record;
     }
-    private getRecordIdentityValue(tableMap: OmegaTableMap, record: OmegaDalRecord): any {
-        return record[tableMap.fields[tableMap.identity].name];
-    }
     public validateField(mapField: OmegaField, validateField: OmegaFieldValuePair, isNewRecord: boolean): void {
         const { fieldName, fieldValue } = validateField;
         if (!mapField.allowNull) {
@@ -138,21 +133,26 @@ export class OmegaRepository implements IOmegaRepository {
             }
         }
         if (fieldValue !== undefined && fieldValue !== null) {
-            const errors: string[] = [];
-            if (mapField.validation.type === 'string') {
-                this.validateStringType(mapField, validateField, errors);
-            }
-            if (mapField.validation.type === 'number') {
-                this.validateNumberType(mapField, validateField, errors);
-            }
-            if (mapField.validation.type === 'datetime') {
-                this.validateDateTimeType(mapField, validateField, errors);
-            }
-            if (mapField.validation.type === 'enum') {
-                this.validateEnumType(mapField, validateField, errors);
-            }
-            if (mapField.validation.type === 'password') {
-                this.validatePasswordType(mapField, validateField, errors);
+            let errors: string[] = [];
+            switch (mapField.validation.type) {
+                case 'string': 
+                    errors = this.validateStringType(mapField, validateField);
+                    break;
+                case 'number':
+                    errors = this.validateNumberType(mapField, validateField);
+                    break;
+                case 'datetime':
+                    errors = this.validateDateTimeType(mapField, validateField);
+                    break;
+                case 'boolean':
+                    errors = this.validateBooleanType(mapField, validateField);
+                    break;
+                case 'enum':
+                    errors = this.validateEnumType(mapField, validateField);
+                    break;
+                case 'password':
+                    errors = this.validatePasswordType(mapField, validateField);
+                    break;
             }
             if (errors.length > 0) {
                 throwFieldValidationError(fieldName, mapField.validation.type, errors);
@@ -168,8 +168,6 @@ export class OmegaRepository implements IOmegaRepository {
         }
         return omegaObjects;
     }
-
-    // DAL interactions
     private async persistObjectArray(externalObjects: OmegaBaseObject[], returnObjects: boolean): Promise<void | OmegaObject[]> {
         const affectedObjects: OmegaObject[] = [];
         for (const omegaObject of externalObjects) {
@@ -180,6 +178,8 @@ export class OmegaRepository implements IOmegaRepository {
         }
         return affectedObjects;
     }
+
+    // DAL interactions
     private async persistObject(omegaObject: OmegaBaseObject, returnObjects: boolean): Promise<void | OmegaObject> {
         const identityValue = await this.createOrUpdateObject(omegaObject);
         if (returnObjects) {
@@ -187,7 +187,7 @@ export class OmegaRepository implements IOmegaRepository {
         }
         return;
     }
-    private async createOrUpdateObject(omegaObject: OmegaBaseObject): Promise<string | number> {
+    private async createOrUpdateObject(omegaObject: OmegaBaseObject): Promise<OmegaRecordId> {
         const record = await this.mapObjectToRecord(omegaObject);
         const tableMap = this.getTableMap(omegaObject.objectSource);
         let identityValue = this.getRecordIdentityValue(tableMap, record);
@@ -199,7 +199,7 @@ export class OmegaRepository implements IOmegaRepository {
         }
         return identityValue;
     }
-    private async requestAffectedObject(source: string, sourceId: string | number): Promise<OmegaObject> {
+    private async requestAffectedObject(source: string, sourceId: OmegaRecordId): Promise<OmegaObject> {
         const tableMap = this.getTableMap(source);
         const criteria = this.buildIdentityCriteria(source, sourceId);
         const records = await this.omegaDal.read(tableMap.name, criteria);
@@ -213,7 +213,8 @@ export class OmegaRepository implements IOmegaRepository {
         }
         this.validateField(mapField, fieldValuePair, false);
     }
-    private validateStringType(mapField: OmegaField, validateField: OmegaFieldValuePair, errors: string[]): void | never {
+    private validateStringType(mapField: OmegaField, validateField: OmegaFieldValuePair): string[] | never {
+        const errors: string[] = [];
         const { fieldValue } = validateField;
         if (mapField.validation.minLength !== undefined) {
             if (!this.isMinLengthSatisfied(fieldValue, mapField.validation.minLength)) {
@@ -225,14 +226,10 @@ export class OmegaRepository implements IOmegaRepository {
                 errors.push(ErrorSuffix.MAX_LENGTH.replace('{0}', mapField.validation.maxLength.toString()));
             }
         }
+        return errors;
     }
-    private isMinValueSatisfied(fieldValue: number, minValue: number): boolean {
-        return !(fieldValue < minValue);
-    }
-    private isMaxValueSatisfied(fieldValue: number, maxValue: number): boolean {
-        return !(fieldValue > maxValue);
-    }
-    private validateNumberType(mapField: OmegaField, validateField: OmegaFieldValuePair, errors: string[]): void | never {
+    private validateNumberType(mapField: OmegaField, validateField: OmegaFieldValuePair): string[] | never {
+        const errors: string[] = [];
         const { fieldValue } = validateField;
         if (typeof fieldValue !== 'number') {
             errors.push(ErrorSuffix.NOT_A_NUMBER);
@@ -248,22 +245,32 @@ export class OmegaRepository implements IOmegaRepository {
                 }
             }
         }
+        return errors;
     }
-    private validateDateTimeType(mapField: OmegaField, validateField: OmegaFieldValuePair, errors: string[]): void | never {
+    private validateDateTimeType(mapField: OmegaField, validateField: OmegaFieldValuePair): string[] | never {
         const { fieldValue } = validateField;
         if (!types.isDate(fieldValue)) {
-            errors.push(ErrorSuffix.NOT_A_DATE);
+            return [ErrorSuffix.NOT_A_DATE];
         }
+        return [];
     }
-    private validateEnumType(mapField: OmegaField, validateField: OmegaFieldValuePair, errors: string[]): void | never {
+    private validateBooleanType(mapField: OmegaField, validateField: OmegaFieldValuePair): string[] | never {
         const { fieldValue } = validateField;
-        if (!mapField.validation.enumList.includes(fieldValue as string | number)) {
-            errors.push(ErrorSuffix.NOT_IN_LIST);
+        if(typeof fieldValue !== 'boolean') {
+            return [ErrorSuffix.NOT_A_BOOLEAN];
         }
-    }
-    private validatePasswordType(mapField: OmegaField, validateField: OmegaFieldValuePair, errors: string[]): void | never {
+        return [];
+    } 
+    private validateEnumType(mapField: OmegaField, validateField: OmegaFieldValuePair): string[] | never {
         const { fieldValue } = validateField;
-        this.validateStringType(mapField, validateField, errors);
+        if (!mapField.validation.enumList.includes(fieldValue as OmegaRecordId)) {
+            return [ErrorSuffix.NOT_IN_LIST];
+        }
+        return [];
+    }
+    private validatePasswordType(mapField: OmegaField, validateField: OmegaFieldValuePair): string[] | never {
+        const { fieldValue } = validateField;
+        const errors = this.validateStringType(mapField, validateField);
         if (mapField.validation.requireCharacters) {
             let lowerFound = false;
             let upperFound = false;
@@ -294,6 +301,7 @@ export class OmegaRepository implements IOmegaRepository {
                 errors.push(ErrorSuffix.MISSING_CHARACTER.replace('{0}', 'symbol'));
             }
         }
+        return errors;
     }
     private isMinLengthSatisfied(fieldValue: OmegaValue, minLength: number): boolean {
         return !((fieldValue as string).length < minLength);
@@ -301,8 +309,17 @@ export class OmegaRepository implements IOmegaRepository {
     private isMaxLengthSatisfied(fieldValue: OmegaValue, maxLength: number): boolean {
         return !((fieldValue as string).length > maxLength);
     }
+    private isMinValueSatisfied(fieldValue: number, minValue: number): boolean {
+        return !(fieldValue < minValue);
+    }
+    private isMaxValueSatisfied(fieldValue: number, maxValue: number): boolean {
+        return !(fieldValue > maxValue);
+    }
 
     // parameter building
+    private getRecordIdentityValue(tableMap: OmegaTableMap, record: OmegaDalRecord): any {
+        return record[tableMap.fields[tableMap.identity].name];
+    }
     private buildAllCriteria(externalCriteria: OmegaCriteria, tableMap: OmegaTableMap): OmegaCriteria {
         const internalCriteria: OmegaCriteria = {};
         if (externalCriteria._and) {
@@ -356,7 +373,7 @@ export class OmegaRepository implements IOmegaRepository {
         }
         return fieldList;
     }
-    public buildIdentityCriteria(table: string, objectId: string | number): OmegaCriteria {
+    public buildIdentityCriteria(table: string, objectId: OmegaRecordId): OmegaCriteria {
         const tableMap = this.omegaMapper.getTableMap(table);
         let field: string;
         try {

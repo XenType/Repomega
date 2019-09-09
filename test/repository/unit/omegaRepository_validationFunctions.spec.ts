@@ -14,7 +14,7 @@ const baseMapField: OmegaField = {
     external: true,
     locked: false,
     validation: {
-        type: ''
+        type: 'string'
     }
 };
 const expectedFieldName = 'testField';
@@ -26,7 +26,7 @@ describe('When calling validateField', () => {
             expect(message).toEqual('');
         });
         test('If the string passes all validation then no exception is thrown', () => {
-            const validation = {
+            const validation: OmegaFieldValidation = {
                 type: 'string',
                 minLength: 9,
                 maxLength: 11
@@ -35,7 +35,7 @@ describe('When calling validateField', () => {
             expect(message).toEqual('');
         });
         test('If the string is too short the expected exception is thrown', () => {
-            const validation = {
+            const validation: OmegaFieldValidation = {
                 type: 'string',
                 minLength: 5
             };
@@ -43,7 +43,7 @@ describe('When calling validateField', () => {
             expect(message).toEqual('Validation Error - ' + expectedFieldName + ' (string field): minimum length (5)');
         });
         test('If the string is too long the expected exception is thrown', () => {
-            const validation = {
+            const validation: OmegaFieldValidation = {
                 type: 'string',
                 maxLength: 12
             };
@@ -106,6 +106,36 @@ describe('When calling validateField', () => {
             expect(message).toEqual('Validation Error - ' + expectedFieldName + ' (datetime field): not a date');
         });
     });
+    describe('When checking Boolean-related constraints', () => {
+        test('If the value is false then no exception is thrown', () => {
+            const validation: OmegaFieldValidation = {
+                type: 'boolean'
+            };
+            const message = runValidationTest(false, validation);
+            expect(message).toEqual('');
+        });
+        test('If the value is true then no exception is thrown', () => {
+            const validation: OmegaFieldValidation = {
+                type: 'boolean'
+            };
+            const message = runValidationTest(false, validation);
+            expect(message).toEqual('');
+        });
+        test('If the value is numeric, but not boolean the expected exception is thrown', () => {
+            const validation: OmegaFieldValidation = {
+                type: 'boolean'
+            };
+            const message = runValidationTest(2, validation);
+            expect(message).toEqual('Validation Error - ' + expectedFieldName + ' (boolean field): not true/false');
+        });
+        test('If the value is a string the expected exception is thrown', () => {
+            const validation: OmegaFieldValidation = {
+                type: 'boolean'
+            };
+            const message = runValidationTest('a', validation);
+            expect(message).toEqual('Validation Error - ' + expectedFieldName + ' (boolean field): not true/false');
+        });
+    });
     describe('When checking enum-related constraints', () => {
         test('If the enum is valid then no exception is thrown', () => {
             const validation: OmegaFieldValidation = {
@@ -148,7 +178,7 @@ describe('When calling validateField', () => {
             expect(message).toEqual('');
         });
         test('If the password is too short the expected exception is thrown', () => {
-            const validation = {
+            const validation: OmegaFieldValidation = {
                 type: 'password',
                 minLength: 5
             };
@@ -158,7 +188,7 @@ describe('When calling validateField', () => {
             );
         });
         test('If the password is too long the expected exception is thrown', () => {
-            const validation = {
+            const validation: OmegaFieldValidation = {
                 type: 'password',
                 maxLength: 15
             };
@@ -168,7 +198,7 @@ describe('When calling validateField', () => {
             );
         });
         test('If the password is lacking a lower case character the expected exception is thrown', () => {
-            const validation = {
+            const validation: OmegaFieldValidation = {
                 type: 'password',
                 requireCharacters: {
                     lowerCase: true
@@ -180,7 +210,7 @@ describe('When calling validateField', () => {
             );
         });
         test('If the password is lacking an upper case character the expected exception is thrown', () => {
-            const validation = {
+            const validation: OmegaFieldValidation = {
                 type: 'password',
                 requireCharacters: {
                     upperCase: true
@@ -192,7 +222,7 @@ describe('When calling validateField', () => {
             );
         });
         test('If the password is lacking a number the expected exception is thrown', () => {
-            const validation = {
+            const validation: OmegaFieldValidation = {
                 type: 'password',
                 requireCharacters: {
                     number: true
@@ -204,7 +234,7 @@ describe('When calling validateField', () => {
             );
         });
         test('If the password is lacking a symbol the expected exception is thrown', () => {
-            const validation = {
+            const validation: OmegaFieldValidation = {
                 type: 'password',
                 requireCharacters: {
                     symbol: true
@@ -216,7 +246,7 @@ describe('When calling validateField', () => {
             );
         });
         test('If the password is lacking a combination of required characters the expected exception is thrown', () => {
-            const validation = {
+            const validation: OmegaFieldValidation = {
                 type: 'password',
                 requireCharacters: {
                     lowerCase: true,

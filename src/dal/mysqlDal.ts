@@ -2,6 +2,7 @@ import * as mySql from 'mysql';
 import { IOmegaDal, OmegaDalRecord, OmegaCriteria, OmegaCriterion, OmegaDalConfig, OmegaCriterionLinkTable } from '.';
 import { OmegaTableIndex } from '../mapper';
 import { FlatMapper } from '../mapper/flatMapper';
+import { OmegaRecordId } from '../common/types';
 
 let connPool: mySql.Pool;
 const INSERT_SQL = 'INSERT INTO {0} SET ?';
@@ -18,7 +19,7 @@ export class MySqlDal implements IOmegaDal {
         connPool = mySql.createPool(dalConfig);
         this.tableList = this.mapper.getTableIndex();
     }
-    public async create(table: string, newRecord: OmegaDalRecord): Promise<string | number> {
+    public async create(table: string, newRecord: OmegaDalRecord): Promise<OmegaRecordId> {
         const dbConn = await this.getDbConnection();
         const sql = INSERT_SQL.replace('{0}', table);
         const sqlResult = await this.getQueryResult(dbConn, sql, newRecord);

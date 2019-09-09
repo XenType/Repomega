@@ -1,9 +1,9 @@
 import { IOmegaMapper } from '../mapper';
-import { OmegaValue } from '../common/types';
+import { OmegaValue, OmegaRecordId } from '../common/types';
 
 export interface IOmegaDal {
     mapper: IOmegaMapper;
-    create(table: string, newRecord: OmegaDalRecord): Promise<string | number>;
+    create(table: string, newRecord: OmegaDalRecord): Promise<OmegaRecordId>;
     read(table: string, criteria: OmegaCriteria, fieldList?: string[]): Promise<OmegaDalRecord[]>;
     update(table: string, updates: Partial<OmegaDalRecord>, criteria: OmegaCriteria): Promise<number>;
     delete(table: string, criteria: OmegaCriteria): Promise<number>;

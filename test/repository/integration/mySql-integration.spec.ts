@@ -3,6 +3,7 @@ import { OmegaCriteria } from '../../../src/dal/index';
 import { OmegaRepository } from '../../../src/repository/omegaRepository';
 import { OmegaObject } from '../../../src/object/omegaObject';
 import { createNewMarketObject } from './fixtures/fixtures';
+import { OmegaRecordId } from '../../../src/common/types';
 
 const integrationConfig = {
     connectionLimit: 10,
@@ -134,7 +135,7 @@ describe('When an omegaRepository with a live omegaDal connection', () => {
             for (const insertedItem of insertedItems) {
                 destroyList.push({
                     table: testRepo.getTableMap('Market').name,
-                    identityCriteria: testRepo.buildIdentityCriteria('Market', insertedItem.objectData.id as string | number)
+                    identityCriteria: testRepo.buildIdentityCriteria('Market', insertedItem.objectData.id as OmegaRecordId)
                 });
             }
         });
@@ -187,7 +188,7 @@ describe('When an omegaRepository with a live omegaDal connection', () => {
             for (const insertedItem of insertedItems) {
                 destroyList.push({
                     table: testRepo.getTableMap('Market').name,
-                    identityCriteria: testRepo.buildIdentityCriteria('Market', insertedItem.objectData.id as string | number)
+                    identityCriteria: testRepo.buildIdentityCriteria('Market', insertedItem.objectData.id as OmegaRecordId)
                 });
             }
         });
@@ -217,7 +218,7 @@ async function runPersistTest(itemArray: OmegaObject[], destroyList: Array<{ tab
     const savedItems = await testRepo.persist(itemArray, true);
     for (const savedItem of savedItems as OmegaObject[]) {
         const itemIdentityField = testRepo.getTableMap(savedItem.objectSource).identity;
-        const identityCriteria = testRepo.buildIdentityCriteria(savedItem.objectSource, savedItem.objectData[itemIdentityField] as string | number);
+        const identityCriteria = testRepo.buildIdentityCriteria(savedItem.objectSource, savedItem.objectData[itemIdentityField] as OmegaRecordId);
         destroyList.push({ table: testRepo.getTableMap(savedItem.objectSource).name, identityCriteria });
         expect(savedItem.objectData[itemIdentityField]).not.toBeUndefined();
         expect(savedItem.objectData[itemIdentityField]).not.toBeNull();

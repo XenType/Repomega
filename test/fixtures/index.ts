@@ -1,7 +1,7 @@
 import { IOmegaRepository } from '../../src/repository';
 import { OmegaObject } from '../../src/object/omegaObject';
 import { OmegaCriteria, OmegaCriterion } from '../../src/dal';
-import { OmegaValue } from '../../src/common/types';
+import { OmegaValue, OmegaRecordId } from '../../src/common/types';
 type stringOrArray = string | string[];
 type valueOrArray = OmegaValue | Array<OmegaValue>;
 
@@ -75,8 +75,8 @@ export function createTestObject(
 export function createLinkObject(
     repo: IOmegaRepository,
     linkTable: string,
-    sourceId: string | number,
-    targetId: string | number
+    sourceId: OmegaRecordId,
+    targetId: OmegaRecordId
 ): OmegaObject {
     const linkObject = new OmegaObject(repo);
     linkObject.objectSource = linkTable;

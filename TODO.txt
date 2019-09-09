@@ -1,17 +1,23 @@
 NEXT
-
-    Refactor large functions
-    - IN PROGRESS
-    Unified error handling in repo
-    - all DAL interactions should be trapped
-    - capture existing internal errors and throw as one
-    Unified error handling in objects
-    - all Repo interactions should be trapped
-    - capture existing internal errors and throw as one
+    Error Refactor
+    - Reorganize Source/Suffix implementation for greater flexibility
+    - Look into stack information?
+    - Allow full field validation to complete before throwing Error
+    - adjust tests to reflect any format changes
     OmegaObject integration tests
     - primary, secondary and tertiary domain objects
     - parent/child 1/N tests
     - lateral tests
+    OmegaFactory planning
+    - Use to expose friendly versions of intended
+        public repository methods
+    - Repos should be tracked and created on demand
+    - Repo index added to OmegaObjects
+    - Will have to use alternate methods of mocking
+        during unit test phase
+    OmegaFactory development / unit test phase
+    OmegaFactory integration tests
+    Refactor large functions
     Refactor tests/fixtures
 
 DISTANT

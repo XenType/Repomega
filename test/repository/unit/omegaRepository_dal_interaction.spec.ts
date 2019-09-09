@@ -6,6 +6,7 @@ import { createTestObject, createOrCriteria } from '../../fixtures';
 import { cloneDeep } from 'lodash';
 import { OmegaBaseObject } from '../../../src/object';
 import { OmegaFieldValuePair } from '../../../src/repository';
+import { OmegaRecordId } from '../../../src/common/types';
 
 const testMapPath = 'test/dal/integration/fixtures/integration-map.json';
 
@@ -252,7 +253,7 @@ async function runRetrieveOneValueTest(
 
 async function runRetrieveOneTest(
     externalTableName: string,
-    expectedIdentityValue: string | number,
+    expectedIdentityValue: OmegaRecordId,
     expectedFieldList: string[],
     expectedDalRecord?: OmegaDalRecord
 ): Promise<void> {
@@ -286,10 +287,10 @@ async function runPersistTest(objectArray: Array<OmegaBaseObject>, returnObjects
     const updateParam3Array: OmegaCriteria[] = [];
     let newIdentityStart = 100;
     const affectedRecordArray: OmegaDalRecord[] = [];
-    const newRecordIdentities: Array<string | number> = [];
+    const newRecordIdentities: Array<OmegaRecordId> = [];
     for (const testObject of objectArray) {
         const tableMap = preDal.mapper.getTableMap(testObject.objectSource);
-        const identityValue = testObject.objectData[tableMap.identity] as string | number;
+        const identityValue = testObject.objectData[tableMap.identity] as OmegaRecordId;
         if (identityValue !== undefined) {
             updateParam1Array.push(tableMap.name);
             const affectedRecord = await preRepo.mapObjectToRecord(testObject);
@@ -311,7 +312,7 @@ async function runPersistTest(objectArray: Array<OmegaBaseObject>, returnObjects
     let mockDalRead = undefined;
     let newItemIndex = -1;
     if (returnObjects) {
-        mockDalCreate = async function(table: string, newRecord: OmegaDalRecord): Promise<string | number> {
+        mockDalCreate = async function(table: string, newRecord: OmegaDalRecord): Promise<OmegaRecordId> {
             newItemIndex++;
             return newRecordIdentities[newItemIndex];
         };

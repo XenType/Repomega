@@ -444,6 +444,15 @@
                         "number": true
                     }
                 }
+            },
+            "booleanTest": {
+                "name": "test_basic_boolean",
+                "external": true,
+                "locked": false,
+                "allowNull": true,
+                "validation": {
+                    "type": "boolean"
+                }
             }
         }
     }

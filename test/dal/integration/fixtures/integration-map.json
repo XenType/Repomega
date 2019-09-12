@@ -191,7 +191,7 @@
                 }
             },
             "companyId": {
-                "name": "test_company_id",
+                "name": "company_id",
                 "external": true,
                 "locked": false,
                 "allowNull": false,

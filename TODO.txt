@@ -1,13 +1,12 @@
 NEXT
+    OmegaObject integration tests
+    - clean up object creation in parent/child 1/N tests
+    - create lateral tests
     Error Refactor
     - Reorganize Source/Suffix implementation for greater flexibility
     - Look into stack information?
     - Allow full field validation to complete before throwing Error
     - adjust tests to reflect any format changes
-    OmegaObject integration tests
-    - primary, secondary and tertiary domain objects
-    - parent/child 1/N tests
-    - lateral tests
     OmegaFactory planning
     - Use to expose friendly versions of intended
         public repository methods

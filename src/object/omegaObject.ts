@@ -7,14 +7,12 @@ import { OmegaCriteria, OmegaCriterionLinkTable } from '../dal';
 import { cloneDeep } from 'lodash';
 import { OmegaValue, OmegaRecordId } from '../common/types';
 import { OmegaBaseObject } from '.';
-import { OmegaRepository } from '../repository/omegaRepository';
 
 // let sourceRepo: IOmegaRepository;
 const extClassName = 'OmegaObject';
 
 export class OmegaObject implements OmegaBaseObject {
     private sourceRepo: IOmegaRepository;
-    public repoIndex: number;
     public tableMap: OmegaTableMap;
     public objectSource: string;
     public objectData: OmegaObjectData;
@@ -38,15 +36,13 @@ export class OmegaObject implements OmegaBaseObject {
             return this.verifyStandardField(field, value, savedValue);
         }
     }
-
-    public async saveInternalField(fieldName: string, fieldValue: OmegaValue): Promise<boolean> {
+    public async saveInternalField(fieldName: string, fieldValue: OmegaValue): Promise<void> {
         this.initTableMap();
         this.validateInternalField(fieldName);
         const fieldValuePair: OmegaFieldValuePair = { fieldName, fieldValue };
-        this.sourceRepo.persistValue(this.objectSource, fieldValuePair, this.objectData[this.tableMap.identity] as OmegaRecordId);
-        return false;
+        await this.sourceRepo.persistValue(this.objectSource, fieldValuePair, this.objectData[this.tableMap.identity] as OmegaRecordId);
+        return;
     }
-
     public async retrieveParentObject(parent: string): Promise<OmegaObject> {
         this.initTableMap();
         this.validateChildAssociation(parent, this.objectSource);

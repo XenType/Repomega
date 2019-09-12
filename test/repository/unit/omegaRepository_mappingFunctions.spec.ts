@@ -335,26 +335,6 @@ describe('When using mapping functions of an omegaRepository', () => {
             testRepo.addFieldTransformToMap('BasicTests', 'numberTest');
             expect(actualResult).toEqual(expectedResult);
         });
-        test('If a valid new external object is passed, the expected record is returned', async () => {
-            const expectedResult: OmegaDalRecord = {
-                test_basic_string: 'abcd',
-                test_basic_number: 10,
-                test_basic_date: new Date('12/23/1977'),
-                test_basic_null: null
-            };
-            const testObject: OmegaBaseObject = {
-                objectSource: 'BasicTests',
-                objectData: {
-                    stringTest: 'abcd',
-                    numberTest: 10,
-                    dateTest: new Date('12/23/1977'),
-                    nullTest: null
-                }
-            };
-            const actualResult = await testRepo.mapObjectToRecord(testObject);
-            expect(actualResult).toEqual(expectedResult);
-        });
-
         test('If a valid partial new external object is passed, the expected record is returned', async () => {
             const expectedResult: OmegaDalRecord = {
                 test_basic_string: 'abcd',

@@ -266,7 +266,7 @@
                     "sourceTable": "OptionGroup",
                     "sourceId": "id",
                     "targetTable": "OptionValue",
-                    "targetId": "optionValueId",
+                    "targetId": "optionGroupId",
                     "sequence": 1
                 }
             ]
@@ -279,7 +279,7 @@
             "userId": {
                 "name": "test_user_id",
                 "external": true,
-                "locked": true,
+                "locked": false,
                 "allowNull": false,
                 "validation": {
                     "type": "number"
@@ -288,7 +288,7 @@
             "optionGroupId": {
                 "name": "test_group_id",
                 "external": true,
-                "locked": true,
+                "locked": false,
                 "allowNull": false,
                 "validation": {
                     "type": "number"
@@ -338,7 +338,7 @@
             "userId": {
                 "name": "test_user_id",
                 "external": true,
-                "locked": true,
+                "locked": false,
                 "allowNull": false,
                 "validation": {
                     "type": "number"
@@ -347,7 +347,7 @@
             "optionValueId": {
                 "name": "test_value_id",
                 "external": true,
-                "locked": true,
+                "locked": false,
                 "allowNull": false,
                 "validation": {
                     "type": "number"

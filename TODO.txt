@@ -1,26 +1,34 @@
 NEXT
-    OmegaObject integration tests
-    - clean up object creation in parent/child 1/N tests
-    - create lateral tests
+    OmegaFactory integration tests
+    - Check Dal behavior on bad config
+    - Test happy/error path for each method
+    
+    Evaluate structure
+    - Factory should be pure methods, repos within are implemented
+        using a singleton methodology
+    - Moving support functions out of classes to reduce exposure
+        - Primarily OmageObject, try to get it down to only the public methods
+        - Could possibly make a helper class or module
+    - OmegaBaseObject is a pure data object, extended by OmageObject
+        - Should there be a way to deal only in OmegaBaseObject?
+
     Error Refactor
     - Reorganize Source/Suffix implementation for greater flexibility
     - Look into stack information?
-    - Allow full field validation to complete before throwing Error
+    - Allow full field validation of all fields to complete before throwing Error
     - adjust tests to reflect any format changes
-    OmegaFactory planning
-    - Use to expose friendly versions of intended
-        public repository methods
-    - Repos should be tracked and created on demand
-    - Repo index added to OmegaObjects
-    - Will have to use alternate methods of mocking
-        during unit test phase
-    OmegaFactory development / unit test phase
-    OmegaFactory integration tests
+    - evaluate worth of try/catch in factory methods
+    
     Refactor large functions
+
     Refactor tests/fixtures
 
-DISTANT
-
     Find missing test coverage
+
     NPM publishing
+
     Config / setup
+    - Generating table maps
+    - Password storage
+
+    Implementation Guide

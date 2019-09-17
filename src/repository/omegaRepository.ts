@@ -135,7 +135,7 @@ export class OmegaRepository implements IOmegaRepository {
         if (fieldValue !== undefined && fieldValue !== null) {
             let errors: string[] = [];
             switch (mapField.validation.type) {
-                case 'string': 
+                case 'string':
                     errors = this.validateStringType(mapField, validateField);
                     break;
                 case 'number':
@@ -256,11 +256,11 @@ export class OmegaRepository implements IOmegaRepository {
     }
     private validateBooleanType(mapField: OmegaField, validateField: OmegaFieldValuePair): string[] | never {
         const { fieldValue } = validateField;
-        if(typeof fieldValue !== 'boolean') {
+        if (typeof fieldValue !== 'boolean') {
             return [ErrorSuffix.NOT_A_BOOLEAN];
         }
         return [];
-    } 
+    }
     private validateEnumType(mapField: OmegaField, validateField: OmegaFieldValuePair): string[] | never {
         const { fieldValue } = validateField;
         if (!mapField.validation.enumList.includes(fieldValue as OmegaRecordId)) {
@@ -318,7 +318,10 @@ export class OmegaRepository implements IOmegaRepository {
 
     // parameter building
     private getRecordIdentityValue(tableMap: OmegaTableMap, record: OmegaDalRecord): any {
-        return record[tableMap.fields[tableMap.identity].name];
+        if (tableMap.identity && tableMap.identity !== '') {
+            return record[tableMap.fields[tableMap.identity].name];
+        }
+        return undefined;
     }
     private buildAllCriteria(externalCriteria: OmegaCriteria, tableMap: OmegaTableMap): OmegaCriteria {
         const internalCriteria: OmegaCriteria = {};
@@ -425,10 +428,12 @@ export class OmegaRepository implements IOmegaRepository {
     // Common object initialization
     private initOmegaDalRecord(tableMap: OmegaTableMap, objectData: OmegaObjectData): OmegaDalRecord {
         const record: OmegaDalRecord = {};
-        const recordIdValue = objectData[tableMap.identity] as OmegaValue;
-        const recordIdField = tableMap.fields[tableMap.identity].name;
-        if (recordIdValue !== undefined) {
-            record[recordIdField] = recordIdValue;
+        if (tableMap.identity && tableMap.identity !== '') {
+            const recordIdValue = objectData[tableMap.identity] as OmegaValue;
+            const recordIdField = tableMap.fields[tableMap.identity].name;
+            if (recordIdValue !== undefined) {
+                record[recordIdField] = recordIdValue;
+            }
         }
         return record;
     }

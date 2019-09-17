@@ -143,6 +143,72 @@ describe('When using an OmegaObject with a live mySql connection', () => {
         });
     });
     // Lateral tests
+    describe('And using lateral link methods', () => {
+        let testUsers: OmegaObject[] = [];
+        let testGroups: OmegaObject[] = [];
+        let testOptions: OmegaObject[] = [];
+        beforeAll(async () => {
+            await generateTestUsers(3, 1, 1, testUsers);
+            await generateTestGroups(3, testGroups);
+            const group1Id = testGroups[0].objectData.id as OmegaRecordId;
+            const group2Id = testGroups[1].objectData.id as OmegaRecordId;
+            const group3Id = testGroups[2].objectData.id as OmegaRecordId;
+            await generateTestOptions(3, group1Id, testOptions);
+            await generateTestOptions(4, group2Id, testOptions);
+            await generateTestOptions(5, group3Id, testOptions);
+        });
+        test('A valid lateral link can be created without error', async () => {
+            const testUser = testUsers[0];
+            const testGroup = testGroups[0];
+            await testUser.createLateralLink(testGroup.objectSource, testGroup.objectData.id as OmegaRecordId);
+        });
+        test('A valid lateral link can be deleted without error', async () => {
+            const theUser = testUsers[2];
+            const theGroup = testGroups[2];
+            await theUser.createLateralLink(theGroup.objectSource, theGroup.objectData.id as OmegaRecordId);
+            const usersGroups = await theUser.retrieveLateralObjects(theGroup.objectSource);
+            expect(usersGroups.length).toEqual(1);
+            await theUser.deleteLateralLink(theGroup.objectSource, theGroup.objectData.id as OmegaRecordId);
+            const postDeleteGroups = await theUser.retrieveLateralObjects(theGroup.objectSource);
+            expect(postDeleteGroups.length).toEqual(0);
+        });
+        const scenario = `1. A User is associated with a lateral object OptionGroup
+        2. OptionGroup is retrieved vai later link to User
+        3. Children of the OptionGroups are retrieved
+        4. First 3 Children are associated with laterlal object OptionValue
+        5. Same 3 objects are retrieved via lateral link to User`;
+        test(`A full use case scenario passes: ${scenario}`, async () => {
+            const theUser = testUsers[1];
+            const theGroup = testGroups[1];
+            await theUser.createLateralLink(theGroup.objectSource, theGroup.objectData.id as OmegaRecordId);
+            const usersGroups = await theUser.retrieveLateralObjects(theGroup.objectSource);
+            const usersGroup = usersGroups[0];
+            const theOptions = await usersGroup.retrieveChildObjects('OptionValue');
+            const passedOptions: OmegaObject[] = [];
+            let counter = 1;
+            for (let anOption of theOptions) {
+                if (counter <= 3) {
+                    await theUser.createLateralLink(anOption.objectSource, anOption.objectData.id as OmegaRecordId);
+                    passedOptions.push(anOption);
+                }
+                counter++;
+            }
+            const usersOptions = await theUser.retrieveLateralObjects(theOptions[0].objectSource);
+            const actualOptions = sortObjectArrayById(usersOptions);
+            const expectedOptions = sortObjectArrayById(passedOptions);
+            expect(actualOptions).toStrictEqual(expectedOptions);
+        });
+        afterAll(async () => {
+            const allTestObjects = testUsers.concat(testGroups).concat(testOptions);
+            for (const testObject of allTestObjects) {
+                await testRepo.deleteOne(testObject.objectSource, testObject.objectData.id as OmegaRecordId);
+            }
+            for (const testUser of testUsers) {
+                await testRepo.deleteMany('UserOptionGroupLink', { _and: [{ field: 'userId', value: testUser.objectData.id }] });
+                await testRepo.deleteMany('UserOptionValueLink', { _and: [{ field: 'userId', value: testUser.objectData.id }] });
+            }
+        });
+    });
 });
 
 const extractUsersOfCompany = (testUsers: OmegaObject[], companyId: OmegaValue): OmegaObject[] => {
@@ -168,6 +234,28 @@ const createAndReturnTestObject = async (table: string, objectData: OmegaObjectD
     newObject.objectData = objectData;
     const returnObjects = await testRepo.persist([newObject], true);
     return returnObjects[0];
+};
+
+const generateTestGroups = async (count: number, testGroups: OmegaObject[]): Promise<void> => {
+    for (let i = 1; i <= count; i++) {
+        const objectData: OmegaObjectData = {
+            groupName: `Group ${i}`
+        };
+        const newObject = await createAndReturnTestObject('OptionGroup', objectData);
+        testGroups.push(newObject);
+    }
+    return;
+};
+const generateTestOptions = async (count: number, optionGroupId: OmegaRecordId, testOptions: OmegaObject[]): Promise<void> => {
+    for (let i = 1; i <= count; i++) {
+        const objectData: OmegaObjectData = {
+            optionGroupId,
+            value: `Option ${i}`
+        };
+        const newObject = await createAndReturnTestObject('OptionValue', objectData);
+        testOptions.push(newObject);
+    }
+    return;
 };
 
 const generateTestMarkets = async (count: number, testMarkets: OmegaObject[]): Promise<void> => {

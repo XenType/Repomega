@@ -8,7 +8,6 @@ import { cloneDeep } from 'lodash';
 import { OmegaValue, OmegaRecordId } from '../common/types';
 import { OmegaBaseObject } from '.';
 
-// let sourceRepo: IOmegaRepository;
 const extClassName = 'OmegaObject';
 
 export class OmegaObject implements OmegaBaseObject {
